@@ -65,7 +65,7 @@ int main(int argc, const char *argv[]) {
     clock_t start, end;
     start = clock();
 
-    call_graph.printCallGraph(std::cout);
+    // call_graph.printCallGraph(std::cout);
     std::fstream out("outTest.dot", ios::out);
       if (out.is_open()) {
       call_graph.writeDotFile(out);

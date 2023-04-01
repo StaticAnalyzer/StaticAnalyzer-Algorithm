@@ -17,7 +17,6 @@ execute_process(
         OUTPUT_STRIP_TRAILING_WHITESPACE
 )
 
-set(LLVM_CONFIG ${LLVM_PREFIX}/bin/llvm-config)
 # specify LLVM include dir
 set(LLVM_INCLUDE ${LLVM_PREFIX}/include)
 # specify LLVM lib dir

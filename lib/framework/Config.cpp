@@ -2,6 +2,10 @@
 
 Config::Config(std::string configFile) {
   std::ifstream infile(configFile.c_str());
+  if (!infile.is_open()) {
+    std::cout << "no such file: " << configFile << std::endl;
+    exit(1);
+  }
   std::string line;
   while (std::getline(infile, line)) {
     line = trim(line);
@@ -47,7 +51,7 @@ Config::getOptionBlock(std::string blockName) {
       std::string, std::unordered_map<std::string, std::string>>::const_iterator
       got = options.find(blockName);
   if (got == options.end()) {
-    std::cout << "block name not found\n";
+    std::cout << "block name " << blockName << " not found\n";
     exit(1);
   } else {
     return got->second;

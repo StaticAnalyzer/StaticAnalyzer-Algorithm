@@ -16,8 +16,6 @@ llvm-config --version
 Compile project:
 
 ```shell
-$ git clone https://git.nju.edu.cn/CAIy/se-experiment
-$ cd SE-Experiment
 $ mkdir cmake-build-debug
 $ cd cmake-build-debug
 $ cmake -G Ninja ..

@@ -2,6 +2,7 @@
 #define CALL_GRAPH_H
 
 #include <unordered_map>
+#include <llvm/Support/raw_ostream.h>
 
 #include "ASTManager.h"
 
@@ -21,7 +22,7 @@ public:
   /* @brief      输出该节点的信息
      @param out  输出流
   */
-  void printCGNode(std::ostream& os);
+  void printCGNode(llvm::raw_string_ostream& os);
 
 private:
   friend class NonRecursiveCallGraph;
@@ -50,7 +51,7 @@ public:
   /* @brief      在控制台中输出函数调用图
      @param out  输出流
   */
-  void printCallGraph(std::ostream& out);
+  void printCallGraph(llvm::raw_string_ostream& out);
   /* @brief      往 .dot文件中写入CGNode信息
      @param out  输出流
   */
