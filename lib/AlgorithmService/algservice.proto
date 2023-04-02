@@ -12,8 +12,9 @@ service AlgService {
 
 message JustReturnRequest {
     bytes file = 1;
+    string config = 2;
 }
 
 message JustReturnResponse {
-    map<string, string> result = 1;
+    string result = 1;
 }
