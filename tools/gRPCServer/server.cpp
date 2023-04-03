@@ -45,6 +45,12 @@ public:
         return result;
     }
 };
+
+bool execCommand(std::string cmd) {
+  std::cout << "execCommand: " << cmd << std::endl;
+  int rt = system(cmd.c_str());
+  return rt == 0;
+}
  
 class AlgServiceImpl final : public AlgService::Service {
   Status JustReturn(ServerContext* context, const JustReturnRequest* request,
@@ -65,7 +71,7 @@ class AlgServiceImpl final : public AlgService::Service {
 
     // 解压缩文件
     std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + source_dir.string();
-    system(cmd.c_str());
+    execCommand(cmd);
 
     // 保存配置文件
     std::string config_filename = "config.txt";
@@ -73,21 +79,20 @@ class AlgServiceImpl final : public AlgService::Service {
     config_out.write(config.c_str(), config.length());
     config_out.close();
 
-    // 生成ast文件和astList.txt，这里先假定只有一个文件
-    fs::directory_iterator dir_ite(source_dir);
+    // 生成ast文件和astList.txt，按默认头文件搜索方式
     std::list<std::string> ast_list;
-    for(const auto& ite : dir_ite)
+    for(const auto& ite : fs::recursive_directory_iterator(source_dir))
     {
       if(ite.status().type() == fs::file_type::regular)
       {
         std::string filename = ite.path().filename().string();
-        // filenmae以.cpp结尾
-        if(filename.rfind(".cpp") != filename.length() - 4)
+        // filenmae以.cpp .c结尾
+        if(filename.rfind(".cpp") != filename.length() - 4 && filename.rfind(".c") != filename.length() - 2)
           continue;
 
         std::string ast_path = ite.path().parent_path().string() + "/" + filename + ".ast";
-        std::string cmd = "clang++ -emit-ast -c " + ite.path().string() + " -o " + ast_path;
-        system(cmd.c_str());
+        std::string cmd = "clang++ -emit-ast -c -I " + (source_dir/"include/").string() + " " + ite.path().string() + " -o " + ast_path;
+        execCommand(cmd);
         ast_list.push_back(ast_path);
       }
     }
@@ -108,7 +113,7 @@ class AlgServiceImpl final : public AlgService::Service {
 
     // 清除临时文件
     cmd = "rm -rf " + project_root.string();
-    system(cmd.c_str());
+    execCommand(cmd);
 
     return Status::OK;
   }
