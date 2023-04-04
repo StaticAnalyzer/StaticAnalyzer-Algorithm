@@ -71,7 +71,7 @@ class AlgServiceImpl final : public AlgService::Service {
 
     // 解压缩文件
     std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + source_dir.string();
-    execCommand(cmd);
+    if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "tar file invalid");
 
     // 保存配置文件
     std::string config_filename = "config.txt";
@@ -92,7 +92,11 @@ class AlgServiceImpl final : public AlgService::Service {
 
         std::string ast_path = ite.path().parent_path().string() + "/" + filename + ".ast";
         std::string cmd = "clang++ -emit-ast -c -I " + (source_dir/"include/").string() + " " + ite.path().string() + " -o " + ast_path;
-        execCommand(cmd);
+        if(!execCommand(cmd)) {
+          cmd = "rm -rf " + project_root.string();
+          if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "Remove temp file failed");
+          return Status(grpc::StatusCode::INTERNAL, "execCommand failed");
+        }
         ast_list.push_back(ast_path);
       }
     }
@@ -113,7 +117,7 @@ class AlgServiceImpl final : public AlgService::Service {
 
     // 清除临时文件
     cmd = "rm -rf " + project_root.string();
-    execCommand(cmd);
+    if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "Remove temp file failed");
 
     return Status::OK;
   }
