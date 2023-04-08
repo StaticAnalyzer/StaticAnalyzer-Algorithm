@@ -1,6 +1,6 @@
 cmake-build-debug/
 build/
-
+.vscode
 example.ast
 time.txt
 outTest.dot

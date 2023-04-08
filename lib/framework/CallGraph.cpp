@@ -78,22 +78,22 @@ CallGraphNode *CallGraph::getNode(ASTFunction *f) {
   }
   return it->second;
 }
-void CallGraphNode::printCGNode(std::ostream& os) {
+void CallGraphNode::printCGNode(llvm::raw_string_ostream& os) {
     std::string functionName = F->getFullName();
-    os << "Callee of " << functionName << ". " << std::endl;
+    os << "Callee of " << functionName << ". \n";
     for (ASTFunction* function : children) {
         std::string calleeName = function->getFullName();
-        os << " " << calleeName << std::endl;
+        os << " " << calleeName << "\n";
     }
 }
-void CallGraph::printCallGraph(std::ostream& out) {
+void CallGraph::printCallGraph(llvm::raw_string_ostream& out) {
     auto it = nodes.begin();
     for (; it != nodes.end(); it++) {
         CallGraphNode* temp = it->second;
         temp->printCGNode(out);
     }
-
 }
+
 void CallGraph::writeDotFile(std::ostream& out) {
     std::string head = "digraph \"Call graph\" {";
     std::string end = "}";

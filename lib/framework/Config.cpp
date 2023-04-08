@@ -2,6 +2,10 @@
 
 Config::Config(std::string configFile) {
   std::ifstream infile(configFile.c_str());
+  if (!infile.is_open()) {
+    std::cout << "no such file: " << configFile << std::endl;
+    throw std::runtime_error("config file error");
+  }
   std::string line;
   while (std::getline(infile, line)) {
     line = trim(line);
@@ -14,7 +18,7 @@ Config::Config(std::string configFile) {
     line = trim(line);
     if (line != "{") {
       std::cout << "config file format error\n";
-      exit(1);
+      throw std::runtime_error("config file error");
     }
     while (std::getline(infile, line)) {
       line = trim(line);
@@ -47,8 +51,8 @@ Config::getOptionBlock(std::string blockName) {
       std::string, std::unordered_map<std::string, std::string>>::const_iterator
       got = options.find(blockName);
   if (got == options.end()) {
-    std::cout << "block name not found\n";
-    exit(1);
+    std::cout << "block name " << blockName << " not found\n";
+    throw std::runtime_error("config file error");
   } else {
     return got->second;
   }

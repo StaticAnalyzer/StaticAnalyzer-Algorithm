@@ -12,6 +12,8 @@
 
 #include "algservice.grpc.pb.h"
 
+#include "analysis/AnalysisFactory.h"
+
 using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
@@ -19,6 +21,16 @@ using grpc::Status;
 using algservice::JustReturnRequest;
 using algservice::JustReturnResponse;
 using algservice::AlgService;
+
+#if __has_include(<filesystem>)
+  #include <filesystem>
+  namespace fs = std::filesystem;
+#elif __has_include(<experimental/filesystem>)
+  #include <experimental/filesystem> 
+  namespace fs = std::experimental::filesystem;
+#else
+  error "Missing the <filesystem> header."
+#endif
 
 class AlgServiceUtils {
 public:
@@ -33,28 +45,92 @@ public:
         return result;
     }
 };
+
+bool execCommand(std::string cmd) {
+  std::cout << "execCommand: " << cmd << std::endl;
+  int rt = system(cmd.c_str());
+  return rt == 0;
+}
+
+void clearTempFile(std::string dir) {
+  std::string cmd = "rm -rf " + dir;
+  execCommand(cmd);
+}
  
 class AlgServiceImpl final : public AlgService::Service {
   Status JustReturn(ServerContext* context, const JustReturnRequest* request,
                     JustReturnResponse* reply) override {
     std::string file = request->file();
+    std::string config = request->config();
 
     // 保存文件到本地
-    std::string filename = AlgServiceUtils::RandomStr(20);
-    std::ofstream out(filename + ".tar.gz", std::ios::binary);
-    out.write(file.c_str(), file.length());
-    out.close();
+    std::string dir = AlgServiceUtils::RandomStr(20);
+    fs::path project_root(dir);
+    fs::path source_dir = project_root / "source";
+    fs::create_directories(source_dir);  // 创建目录
+
+    std::string code_filename = dir + ".tar.gz";
+    std::ofstream code_out(project_root / code_filename, std::ios::binary);
+    code_out.write(file.c_str(), file.length());
+    code_out.close();
 
     // 解压缩文件
-    std::string cmd = "mkdir " + filename + ";" + "tar -zxvf " + filename + ".tar.gz -C " + filename;
-    system(cmd.c_str());
+    std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + source_dir.string();
+    if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "tar file invalid");
+
+    // 保存配置文件
+    std::string config_filename = "config.txt";
+    std::ofstream config_out(project_root / config_filename, std::ios::binary);
+    config_out.write(config.c_str(), config.length());
+    config_out.close();
+
+    // 生成ast文件和astList.txt，按默认头文件搜索方式
+    std::list<std::string> ast_list;
+    for(const auto& ite : fs::recursive_directory_iterator(source_dir))
+    {
+      if(ite.status().type() == fs::file_type::regular)
+      {
+        std::string filename = ite.path().filename().string();
+        // filenmae以.cpp .c结尾
+        if(filename.rfind(".cpp") != filename.length() - 4 && filename.rfind(".c") != filename.length() - 2)
+          continue;
+
+        std::string ast_path = ite.path().parent_path().string() + "/" + filename + ".ast";
+        std::string cmd = "clang++ -emit-ast -c -I " + (source_dir/"include/").string() + " " + ite.path().string() + " -o " + ast_path;
+        if(!execCommand(cmd)) {
+          clearTempFile(project_root.string());
+          return Status(grpc::StatusCode::INTERNAL, "execCommand failed");
+        }
+        ast_list.push_back(ast_path);
+      }
+    }
+    std::ofstream astlist_out(project_root / "astlist.txt", std::ios::binary);
+    for(const auto& ite : ast_list)
+    {
+      astlist_out << ite << std::endl;
+    }
+    astlist_out.close();
+
 
     // 执行算法
-    (*reply->mutable_result())["test"] = "test";
+    try
+    {
+      analysis::AnalysisFactory analysisFactory(
+          project_root / "astlist.txt",
+          project_root / "config.txt");
+      std::unique_ptr<analysis::Analysis> echo = analysisFactory.createEchoAnalysis();
+      *reply->mutable_result() = echo->analyze();
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      clearTempFile(project_root.string());
+      return Status(grpc::StatusCode::INTERNAL, "Analyse failed");
+    }
 
     // 清除临时文件
-    cmd = "rm -rf " + filename + ".tar.gz " + filename;
-    system(cmd.c_str());
+    cmd = "rm -rf " + project_root.string();
+    if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "Remove temp file failed");
 
     return Status::OK;
   }
