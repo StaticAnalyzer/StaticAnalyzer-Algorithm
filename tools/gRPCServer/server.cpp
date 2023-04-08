@@ -51,6 +51,11 @@ bool execCommand(std::string cmd) {
   int rt = system(cmd.c_str());
   return rt == 0;
 }
+
+void clearTempFile(std::string dir) {
+  std::string cmd = "rm -rf " + dir;
+  execCommand(cmd);
+}
  
 class AlgServiceImpl final : public AlgService::Service {
   Status JustReturn(ServerContext* context, const JustReturnRequest* request,
@@ -93,8 +98,7 @@ class AlgServiceImpl final : public AlgService::Service {
         std::string ast_path = ite.path().parent_path().string() + "/" + filename + ".ast";
         std::string cmd = "clang++ -emit-ast -c -I " + (source_dir/"include/").string() + " " + ite.path().string() + " -o " + ast_path;
         if(!execCommand(cmd)) {
-          cmd = "rm -rf " + project_root.string();
-          if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "Remove temp file failed");
+          clearTempFile(project_root.string());
           return Status(grpc::StatusCode::INTERNAL, "execCommand failed");
         }
         ast_list.push_back(ast_path);
@@ -109,11 +113,20 @@ class AlgServiceImpl final : public AlgService::Service {
 
 
     // 执行算法
-    analysis::AnalysisFactory analysisFactory(
-        project_root / "astlist.txt",
-        project_root / "config.txt");
-    std::unique_ptr<analysis::Analysis> echo = analysisFactory.createEchoAnalysis();
-    *reply->mutable_result() = echo->analyze();
+    try
+    {
+      analysis::AnalysisFactory analysisFactory(
+          project_root / "astlist.txt",
+          project_root / "config.txt");
+      std::unique_ptr<analysis::Analysis> echo = analysisFactory.createEchoAnalysis();
+      *reply->mutable_result() = echo->analyze();
+    }
+    catch(const std::exception& e)
+    {
+      std::cerr << e.what() << '\n';
+      clearTempFile(project_root.string());
+      return Status(grpc::StatusCode::INTERNAL, "Analyse failed");
+    }
 
     // 清除临时文件
     cmd = "rm -rf " + project_root.string();
