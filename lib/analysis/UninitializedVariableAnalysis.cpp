@@ -82,9 +82,9 @@ static void recursiveVisitBlock(const CFGBlock *block,
   }
 }
 
-std::string analysis::UninitializedVariableAnalysis::analyze() {
-  std::string str;
-  llvm::raw_string_ostream result(str);
+void analysis::UninitializedVariableAnalysis::analyze() {
+  // std::string str;
+  // llvm::raw_string_ostream result(str);
 
   for (ASTFunction *fun : resource.getFunctions()) {
     FunctionDecl *funDecl = manager.getFunctionDecl(fun);
@@ -99,26 +99,34 @@ std::string analysis::UninitializedVariableAnalysis::analyze() {
       continue;
     }
 
-    result << "{"
-           << "file: \"" << fun->getASTFile()->getAST() << "\", "
-           << "analyseResults: [";
+    initializeSuccessfulResult(std::string("UninitializedVariableAnalysis"));
+
+    // result << "{"
+    //        << "file: \"" << fun->getASTFile()->getAST() << "\", "
+    //        << "analyseResults: [";
 
     for (const VarDecl *VD : uninit_vars) {
       SourceLocation startLoc = VD->getBeginLoc();
       SourceLocation endLoc = VD->getEndLoc();
       SourceManager &SM = manager.getASTContext(fun)->getSourceManager();
-      result << "{"
-             << "startLine: " << SM.getPresumedLineNumber(startLoc) << ", "
-             << "startColumn: " << SM.getPresumedColumnNumber(startLoc) << ", "
-             << "endLine: " << SM.getPresumedLineNumber(endLoc) << ", "
-             << "endColumn: " << SM.getPresumedColumnNumber(endLoc) << ", "
-             << "severity: 'warning', "
-             << "message: 'Uninitialized variable'"
-             << "},";
+      addFileResultEntry(fun->getASTFile()->getAST(),
+        SM.getPresumedLineNumber(startLoc), SM.getPresumedColumnNumber(startLoc),
+        SM.getPresumedLineNumber(endLoc), SM.getPresumedColumnNumber(endLoc),
+        std::string("warning"), std::string("Uninitialized variable")
+        );
+
+      // result << "{"
+      //        << "startLine: " << SM.getPresumedLineNumber(startLoc) << ", "
+      //        << "startColumn: " << SM.getPresumedColumnNumber(startLoc) << ", "
+      //        << "endLine: " << SM.getPresumedLineNumber(endLoc) << ", "
+      //        << "endColumn: " << SM.getPresumedColumnNumber(endLoc) << ", "
+      //        << "severity: 'warning', "
+      //        << "message: 'Uninitialized variable'"
+      //        << "},";
     }
 
-    result << "]},";
+    // result << "]},";
   }
 
-  return str;
+  // return str;
 }

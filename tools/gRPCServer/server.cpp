@@ -118,8 +118,9 @@ class AlgServiceImpl final : public AlgService::Service {
       analysis::AnalysisFactory analysisFactory(
           project_root / "astlist.txt",
           project_root / "config.txt");
-      std::unique_ptr<analysis::Analysis> echo = analysisFactory.createEchoAnalysis();
-      *reply->mutable_result() = echo->analyze();
+      std::unique_ptr<analysis::Analysis> echo = analysisFactory.createUninitializedVariableAnalysis();
+      echo->analyze();
+      *reply->mutable_result() = echo->getResult().dump();
     }
     catch(const std::exception& e)
     {

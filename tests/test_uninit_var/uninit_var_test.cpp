@@ -5,18 +5,14 @@
 
 TEST(UnInitVarTest, Test1) {
   analysis::AnalysisFactory analysisFactory(
-      "/root/StaticAnalyzer-WebUI/src/Algorithm/tests/test_uninit_var/"
+      "/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/"
       "astlist.txt",
-      "/root/StaticAnalyzer-WebUI/src/Algorithm/tests/test_uninit_var/"
+      "/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/"
       "config.txt");
   std::unique_ptr<analysis::Analysis> uninit_var =
       analysisFactory.createUninitializedVariableAnalysis();
-
-  std::string analyze_result_json = uninit_var->analyze();
-  std::cout << analyze_result_json << std::endl;
-// R"({"code": 0, "msg": "", "analyseResults": [)" +  + R"(]})";
-
-  EXPECT_STREQ(
-      R"({file: "/root/StaticAnalyzer-WebUI/src/Algorithm/tests/test_uninit_var/example.ast", analyseResults: [{startLine: 13, startColumn: 9, endLine: 13, endColumn: 13, severity: 'warning', message: 'Uninitialized variable'},{startLine: 7, startColumn: 5, endLine: 7, endColumn: 9, severity: 'warning', message: 'Uninitialized variable'},]},)",
-      analyze_result_json.c_str());
+  uninit_var->analyze();
+  json result = uninit_var->getResult();
+  EXPECT_STREQ(result.dump().c_str(), R"({"analyseType":"UninitializedVariableAnalysis","code":0,"fileAnalyseResults":{"/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/example.ast":[{"endColumn":9,"endLine":7,"message":"Uninitialized variable","severity":"warning","startColumn":5,"startLine":7},{"endColumn":13,"endLine":13,"message":"Uninitialized variable","severity":"warning","startColumn":9,"startLine":13}]},"msg":"success"})");
+  std::cout << std::setw(4) << result << std::endl;
 }

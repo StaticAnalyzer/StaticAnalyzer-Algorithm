@@ -10,7 +10,7 @@ analysis::EchoAnalysis::EchoAnalysis(ASTResource& resource, ASTManager& manager,
 
 }
 
-std::string analysis::EchoAnalysis::analyze() 
+void analysis::EchoAnalysis::analyze() 
 {   
     std::string str;
     llvm::raw_string_ostream result(str);
@@ -33,7 +33,9 @@ std::string analysis::EchoAnalysis::analyze()
     result << "----------------------------------------------------------\n";
     callGraph.printCallGraph(result);
     result << "----------------------------------------------------------\n";
-    return str;
+    
+    initializeFailedResult("EchoAnalysis", str);
+    //return str;
 }
 
 analysis::EchoAnalysis::~EchoAnalysis() {

@@ -1,1 +1,1 @@
-/root/StaticAnalyzer-WebUI/src/Algorithm/tests/test_uninit_var/example.ast
+/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/example.ast

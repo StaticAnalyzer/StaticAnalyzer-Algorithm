@@ -11,7 +11,8 @@ namespace analysis {
 
 /// @brief The factory class to generate diffenent analysis
 /// based on the same program.
-class AnalysisFactory {
+class AnalysisFactory final 
+{
 private:
     /// @brief ast file path list
     std::vector<std::string> ASTs;
