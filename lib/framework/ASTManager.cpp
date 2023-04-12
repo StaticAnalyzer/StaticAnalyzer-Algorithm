@@ -113,8 +113,9 @@ ASTManager::ASTManager(std::vector<std::string> &ASTs, ASTResource &resource,
 
     ASTFile *AF = resource.addASTFile(AST);
     std::unique_ptr<ASTUnit> AU = common::loadFromASTFile(AST);
+    ASTContext *Context = &AU->getASTContext();
     std::vector<FunctionDecl *> functions =
-        common::getFunctions(AU->getASTContext());
+        common::getFunctions(*Context);
 
     for (FunctionDecl *FD : functions) {
       std::string name = common::getFullName(FD);
@@ -124,6 +125,8 @@ ASTManager::ASTManager(std::vector<std::string> &ASTs, ASTResource &resource,
       }
 
       ASTFunction *F = resource.addASTFunction(FD, AF, use);
+      ASTContexts[F] = Context;
+
       std::vector<VarDecl *> variables = common::getVariables(FD);
 
       for (VarDecl *VD : variables) {
@@ -166,6 +169,14 @@ FunctionDecl *ASTManager::getFunctionDecl(ASTFunction *F) {
     FD = bimap.getFunctionDecl(F);
   }
   return FD;
+}
+
+ASTContext *ASTManager::getASTContext(ASTFunction *F) {
+  auto it = ASTContexts.find(F);
+  if (it != ASTContexts.end()) {
+    return it->second;
+  }
+  return nullptr;
 }
 
 ASTVariable *ASTManager::getASTVariable(VarDecl *VD) {

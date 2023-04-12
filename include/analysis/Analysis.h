@@ -44,6 +44,17 @@ public:
     virtual std::string analyze();
 };
 
+/// @brief uninitialized variable analysis detects uninitialized variables
+class UninitializedVariableAnalysis: public Analysis
+{
+
+public:
+    UninitializedVariableAnalysis(ASTResource& resource, ASTManager& manager, CallGraph& callGraph, Config& configure);
+    ~UninitializedVariableAnalysis();
+
+    virtual std::string analyze();
+};
+
 }
 
 

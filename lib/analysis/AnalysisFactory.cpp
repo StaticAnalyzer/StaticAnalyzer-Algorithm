@@ -24,6 +24,11 @@ std::unique_ptr<analysis::Analysis> analysis::AnalysisFactory::createEchoAnalysi
     return std::make_unique<EchoAnalysis>(*resource, *manager, *callGraph, configure);
 }
 
+std::unique_ptr<analysis::Analysis> analysis::AnalysisFactory::createUninitializedVariableAnalysis()
+{
+    return std::make_unique<UninitializedVariableAnalysis>(*resource, *manager, *callGraph, configure);
+}
+
 analysis::AnalysisFactory::~AnalysisFactory()
 {
     delete resource;

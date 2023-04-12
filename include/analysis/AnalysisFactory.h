@@ -39,6 +39,7 @@ public:
     /// @brief echo analysis simply returns the cfg and cg of input program
     /// @return an echo analysis object 
     std::unique_ptr<Analysis> createEchoAnalysis();
+    std::unique_ptr<Analysis> createUninitializedVariableAnalysis();
 };
 
 }

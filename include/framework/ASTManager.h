@@ -76,6 +76,7 @@ public:
 
   ASTUnit *getASTUnit(ASTFile *AF);
   FunctionDecl *getFunctionDecl(ASTFunction *F);
+  ASTContext *getASTContext(ASTFunction *F);
 
   ASTVariable *getASTVariable(VarDecl *VD);
   VarDecl *getVarDecl(ASTVariable *V);
@@ -89,6 +90,7 @@ private:
   ASTBimap bimap;
   std::unordered_map<std::string, ASTUnit *> ASTs;
   std::unordered_map<ASTFunction *, std::unique_ptr<CFG>> CFGs;
+  std::unordered_map<ASTFunction *, ASTContext *> ASTContexts;
 
   unsigned max_size;
   std::list<std::unique_ptr<ASTUnit>> ASTQueue;

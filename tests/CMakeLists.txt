@@ -7,3 +7,4 @@ FetchContent_MakeAvailable(googletest)
 
 add_subdirectory(test_env)
 add_subdirectory(test_echo)
+add_subdirectory(test_uninit_var)
