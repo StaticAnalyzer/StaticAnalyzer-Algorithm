@@ -47,7 +47,7 @@ protected:
     /// @param startColumn error location start column (indexed from 1)
     /// @param endLine error location end line (included)
     /// @param endColumn error location end column (excluded)
-    /// @param severity severity level: Hint, Info, Warning, Error
+    /// @param severity severity level: Severity::Hint, Severity::Info, Severity::Warning, Severity::Error
     /// @param message error message
     void addFileResultEntry(const std::string& file, 
         int startLine, int startColumn, int endLine, int endColumn, 

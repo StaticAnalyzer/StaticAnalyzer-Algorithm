@@ -6,10 +6,11 @@
 
 ## Change Log
 
-| Date      | Change                            |
-| --------- | --------------------------------- |
-| 2023.4.2  | The first version                 |
-| 2023.4.12 | Change result obtaining mechanism |
+| Date      | Change                                    |
+| --------- | ----------------------------------------- |
+| 2023.4.2  | The first version                         |
+| 2023.4.12 | Change result obtaining mechanism         |
+| 2023.4.13 | Provide an enum class for severity levels |
 
 
 
@@ -154,8 +155,16 @@ class AnalysisFactory {
     +createOtherAnalysis(XXX xxx): Analysis
 }
 
+class Severity {
+	<<Enumeration>>
+	Hint
+	Info
+	Warning
+	Error
+}
+
 class Analysis {
-    <<abstract>>
+    <<Abstract>>
     #resource: ASTResource
     #manager: ASTManager
     #callGraph: CallGraph
@@ -165,7 +174,7 @@ class Analysis {
     +getResult() json
     #initializeFailedResult(string analyseType, string msg)
     #initializeSuccessfulResult(string analyseType)
-    #addFileResultEntry(string file, int startLine, int startColumn, int endLine, int endColumn, string severity, string message)
+    #addFileResultEntry(string file, int startLine, int startColumn, int endLine, int endColumn, Severity severity, string message)
 }
 
 class EchoAnalysis {
@@ -182,6 +191,7 @@ class OtherAnalysis {
 }
 
 AnalysisFactory ..> Analysis
+Severity -- Analysis
 Analysis <|.. EchoAnalysis
 Analysis <|.. UninitializedVariableAnalysis
 Analysis <|.. OtherAnalysis
@@ -215,11 +225,11 @@ void initializeSuccessfulResult(const std::string& analyseType);
 /// @param startColumn error location start column (indexed from 1)
 /// @param endLine error location end line (included)
 /// @param endColumn error location end column (excluded)
-/// @param severity severity level: Hint, Info, Warning, Error
+/// @param severity severity level: Severity::Hint, Severity::Info, Severity::Warning, Severity::Error
 /// @param message error message
 void addFileResultEntry(const std::string& file, 
     int startLine, int startColumn, int endLine, int endColumn, 
-    const std::string& severity, const std::string& message);
+    Severity severity, const std::string& message);
 ```
 
 - If you fail to analyze the program, just call `initializeFailedResult`  to initialize a failed result and return in `analyze()`.
