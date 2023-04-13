@@ -4,3 +4,4 @@ build/
 example.ast
 time.txt
 outTest.dot
+.DS_Store

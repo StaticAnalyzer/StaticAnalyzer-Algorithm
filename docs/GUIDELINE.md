@@ -4,25 +4,46 @@
 
 
 
+## Change Log
+
+| Date      | Change                            |
+| --------- | --------------------------------- |
+| 2023.4.2  | The first version                 |
+| 2023.4.12 | Change result obtaining mechanism |
+
+
+
 ## For Client Contributors
 
 ### What are provided?
 
-We provide **an interface** `analysis::Analysis` and **a factory class** `analysis::AnalysisFactory` for clients.
+We provide **an abstract class** `analysis::Analysis` and **a factory class** `analysis::AnalysisFactory` for clients.
 
 ```cpp
 namespace analysis {
     
-class Analysis {
+/// @brief interface class for all analysis
+class Analysis 
+{
 public:
-    virtual std::string analyze()=0;
-}
+    Analysis(ASTResource& resource, ASTManager& manager, CallGraph& callGraph, Config& configure);
+
+    ~Analysis() = default;
+
+    /// @brief perform the analysis
+    virtual void analyze()=0;
+    
+    /// @brief get the result of analysis
+    /// @return a json object
+    const json& getResult();
+};
 
 class AnalysisFactory {
 public:
-	AnalysisFactory(std::string astListFilePath, std::string configFilePath);
+    AnalysisFactory(std::string astListFilePath, std::string configFilePath);
     Config& getConfigure();
     std::unique_ptr<Analysis> createEchoAnalysis();
+    std::unique_ptr<Analysis> createUninitializedVariableAnalysis();
     // more analysis factory method to come ...
 }
 
@@ -37,8 +58,8 @@ The clients should perform analysis like below.
 
 ```cpp
 analysis::AnalysisFactory analysisFactory(
-        "/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_echo/astlist.txt",
-        "/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_echo/config.txt");
+        "/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/astlist.txt",
+        "/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/config.txt");
 ```
 
 > Absolute path recommended, since relative path might be quite confusing.
@@ -46,23 +67,32 @@ analysis::AnalysisFactory analysisFactory(
 **Step02**: Generate an analysis corresponding to a specific program and configuration using factory methods.
 
 ```cpp
-std::unique_ptr<analysis::Analysis> echo = analysisFactory.createEchoAnalysis();
+std::unique_ptr<analysis::Analysis> uni = analysisFactory.createUninitializedVariableAnalysis();
 ```
 
-**Step03**: Call `analyze()` method to get results. 
+**Step03**: Call `analyze()` method to perform analysis.
 
 ```cpp
-std::cout << echo->analyze() << std::endl;
+uni->analyze();
+```
+
+**Step04**: Call `getResult()` to get a json object representing the analysis result. 
+
+```cpp
+json result = uni->getResult();
+// call result.dump() will give you a string representation of the json object
+// you can also use result to construct other json objects
+std::cout << result.dump() << std::endl;
 ```
 
 ### A Preview Example
 
-To preview the results of echo analysis example, first modify the absolute path in `tests/test_echo/astlist.txt` and `tests/test_echo/echo_test.cpp` to make them correspond to your environment.
+To preview the results of echo analysis example, first modify the absolute path in `tests/test_uninit_var/astlist.txt` and `tests/test_uninit_var/echo_test.cpp` to make them correspond to your environment.
 
-Then, generate the ast file of `tests/test_echo/example.cpp`.
+Then, generate the ast file of `tests/test_uninit_var/example.cpp`.
 
 ```shell
-cd tests/test_echo
+cd tests/test_uninit_var
 clang++ -emit-ast -c example.cpp
 ```
 
@@ -73,12 +103,12 @@ mkdir build
 cd build
 cmake ..
 make
-ctest -R EchoTest.Test1 -V
+ctest -R UnInitVarTest.Test1 -V
 ```
 
-And you'll see what will `echo->analyze()` give you.
+And you'll see what will `uni->analyze()`   and `uni->getResult()`give you.
 
-> Note that `3:` in the beginning of each line is just prompt from google test, not part of `echo->analyze()` .
+> Note that `3:` in the beginning of each line is just prompt from google test, not part of `uni->analyze()`  and `uni->getResult()`.
 
 ### How to build?
 
@@ -120,8 +150,8 @@ class AnalysisFactory {
     -callGraph: CallGraph
     +getConfig(): Config
     +createEchoAnalysis(): Analysis
-    +createOtherAnalysis1(XXX xxx): Analysis
-    +createOtherAnalysis2(XXX xxx): Analysis
+    +createUninitializedVariableAnalysis(): Analysis
+    +createOtherAnalysis(XXX xxx): Analysis
 }
 
 class Analysis {
@@ -130,48 +160,88 @@ class Analysis {
     #manager: ASTManager
     #callGraph: CallGraph
     #configure: Config
-    +analyze()* string 
+    -json result;
+    +analyze()*
+    +getResult() json
+    #initializeFailedResult(string analyseType, string msg)
+    #initializeSuccessfulResult(string analyseType)
+    #addFileResultEntry(string file, int startLine, int startColumn, int endLine, int endColumn, string severity, string message)
 }
 
 class EchoAnalysis {
-	+analyze() string 
+	+analyze()
 }
 
-class OtherAnalysis1 {
-	-xxx: XXX
-	+analyze() string 
+class UninitializedVariableAnalysis {
+	+analyze()
 }
 
-class OtherAnalysis2 {
+class OtherAnalysis {
 	-xxx: XXX
-	+analyze() string 
+	+analyze()
 }
 
 AnalysisFactory ..> Analysis
 Analysis <|.. EchoAnalysis
-Analysis <|.. OtherAnalysis1
-Analysis <|.. OtherAnalysis2
+Analysis <|.. UninitializedVariableAnalysis
+Analysis <|.. OtherAnalysis
 ```
 
-So far, only `EchoAnalysis`  and `createEchoAnalysis` is implemented. `OtherAnalysis1` and `OtherAnalysis2` is just conceptual demonstrations.
+
+
+So far,  `EchoAnalysis` and  `UninitializedVariableAnalysis`  are implemented. `OtherAnalysis` is just a conceptual demonstration for contributors to reference.
 
 ### How to Contribute?
 
-**Step01**: Add a new class that implements `Analysis`, like `OtherAnalysis1` and `OtherAnalysis2`. 
+**Step01**: Add a new class that implements `Analysis`, like `OtherAnalysis` . 
 
-> Conventionally, `resource`, `manager`, `callGraph`, `config` are what you'll have access to.
+> Conventionally, `resource`, `manager`, `callGraph`, `config` are what you'll have access to that representing the program to be analyzed.
 
-**Step02**: Add a factory method in `AnalysisFactory` to instantiate your analysis, like `createOtherAnalysis1` and `createOtherAnalysis2`. 
+There're also three protected functions implemented in `Analysis` that you can take advantage of to generate analysis results.
 
-> You need to pass what you need to your analysis in this factory method.
+```cpp
+/// @brief initialize the result as a failed result
+/// @param analyseType analysis algorithm type
+/// @param msg error message
+void initializeFailedResult(const std::string& analyseType, const std::string& msg);
+
+/// @brief initialze the result as a successful result
+/// @param analyseType analysis algorithm type
+void initializeSuccessfulResult(const std::string& analyseType);
+
+/// @brief add a file result entry
+/// @param file path of the file being analyzed
+/// @param startLine error location start line (indexed from 1)
+/// @param startColumn error location start column (indexed from 1)
+/// @param endLine error location end line (included)
+/// @param endColumn error location end column (excluded)
+/// @param severity severity level: Hint, Info, Warning, Error
+/// @param message error message
+void addFileResultEntry(const std::string& file, 
+    int startLine, int startColumn, int endLine, int endColumn, 
+    const std::string& severity, const std::string& message);
+```
+
+- If you fail to analyze the program, just call `initializeFailedResult`  to initialize a failed result and return in `analyze()`.
+
+- If you successfully analyze the program, you should 
+
+    - First call `initializeSuccessfulResult` to initialize a successful result.
+    - Then, call `addFileResultEntry` to add result entries.
+
+    > Note that you should not call `addFileResultEntry` before you call `initializeSuccessfulResult` 。
+
+**Step02**: Add a factory method in `AnalysisFactory` to instantiate your analysis, like `createUninitializedVariableAnalysis` and `createOtherAnalysis`. 
+
+> You need to pass what you need to your analysis in this factory method if necessary.
 >
 >  `resource`, `manager`, `callGraph`, `config` are compulsory, while you also can ask clients to provide additional informations by adding parameters to factory methods. For example, 
 >
 > ```cpp
-> unique_ptr<Analysis> createOtherAnalysis1(bool flag, int integer);
+> unique_ptr<Analysis> createOtherAnalysis(bool flag, int integer);
 > ```
 >
 > The factory method above can ask client to privide a boolean flag and an integer.
 
-**Step03**: Add a test case for your analysis in `tests` directory. You can take `tests/test_echo` as an example to figure out how to write a unit test.
+**Step03**: Add a test case for your analysis in `tests` directory. You can take `tests/test_echo` or `tests/test_uninit_var` as an example to figure out how to write a google unit test.
 
