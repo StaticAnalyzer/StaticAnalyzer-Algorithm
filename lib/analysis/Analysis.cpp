@@ -4,6 +4,14 @@
 
 namespace analysis {
 
+    const std::unordered_map<Analysis::Severity, std::string> Analysis::enumToString =
+    {
+        {Analysis::Severity::Hint, "Hint"}, 
+        {Analysis::Severity::Info, "Info"},
+        {Analysis::Severity::Warning, "Warning"},
+        {Analysis::Severity::Error, "Error"}
+    };
+
     Analysis::Analysis(ASTResource& resource, ASTManager& manager, CallGraph& callGraph, Config& configure)
         :resource(resource), manager(manager), callGraph(callGraph), configure(configure)
     {
@@ -37,7 +45,7 @@ namespace analysis {
 
     void Analysis::addFileResultEntry(const std::string& file, 
         int startLine, int startColumn, int endLine, int endColumn, 
-        const std::string& severity, const std::string& message)
+        Severity severity, const std::string& message)
     {
         if (!result["fileAnalyseResults"].contains(file)) {
             result["fileAnalyseResults"][file] = std::list<json>();
@@ -48,7 +56,7 @@ namespace analysis {
             {"startColumn", startColumn},
             {"endLine", endLine},
             {"endColumn", endColumn},
-            {"severity", severity},
+            {"severity", enumToString.at(severity)},
             {"message", message}
         });
     }

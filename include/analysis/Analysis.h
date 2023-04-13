@@ -2,6 +2,7 @@
 #define ANALYSIS_H
 
 #include <string>
+#include <unordered_map>
 
 #include "nlohmann/json.h"
 
@@ -16,8 +17,14 @@ namespace analysis {
 /// @brief interface class for all analysis
 class Analysis 
 {
+protected:
+    enum class Severity {
+        Hint, Info, Warning, Error
+    };
+
 private:
     json result;
+    static const std::unordered_map<Severity, std::string> enumToString;
 
 protected:
     ASTResource& resource;
@@ -44,7 +51,7 @@ protected:
     /// @param message error message
     void addFileResultEntry(const std::string& file, 
         int startLine, int startColumn, int endLine, int endColumn, 
-        const std::string& severity, const std::string& message);
+        Severity severity, const std::string& message);
 
 public:
     Analysis(ASTResource& resource, ASTManager& manager, CallGraph& callGraph, Config& configure);

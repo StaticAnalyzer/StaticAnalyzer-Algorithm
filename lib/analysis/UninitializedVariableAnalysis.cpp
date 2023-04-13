@@ -101,10 +101,6 @@ void analysis::UninitializedVariableAnalysis::analyze() {
 
     initializeSuccessfulResult(std::string("UninitializedVariableAnalysis"));
 
-    // result << "{"
-    //        << "file: \"" << fun->getASTFile()->getAST() << "\", "
-    //        << "analyseResults: [";
-
     for (const VarDecl *VD : uninit_vars) {
       SourceLocation startLoc = VD->getBeginLoc();
       SourceLocation endLoc = VD->getEndLoc();
@@ -112,21 +108,8 @@ void analysis::UninitializedVariableAnalysis::analyze() {
       addFileResultEntry(fun->getASTFile()->getAST(),
         SM.getPresumedLineNumber(startLoc), SM.getPresumedColumnNumber(startLoc),
         SM.getPresumedLineNumber(endLoc), SM.getPresumedColumnNumber(endLoc),
-        std::string("warning"), std::string("Uninitialized variable")
+        Severity::Warning, std::string("Uninitialized variable")
         );
-
-      // result << "{"
-      //        << "startLine: " << SM.getPresumedLineNumber(startLoc) << ", "
-      //        << "startColumn: " << SM.getPresumedColumnNumber(startLoc) << ", "
-      //        << "endLine: " << SM.getPresumedLineNumber(endLoc) << ", "
-      //        << "endColumn: " << SM.getPresumedColumnNumber(endLoc) << ", "
-      //        << "severity: 'warning', "
-      //        << "message: 'Uninitialized variable'"
-      //        << "},";
     }
-
-    // result << "]},";
   }
-
-  // return str;
 }

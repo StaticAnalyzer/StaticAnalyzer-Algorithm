@@ -35,7 +35,7 @@ void analysis::EchoAnalysis::analyze()
     result << "----------------------------------------------------------\n";
     
     initializeFailedResult("EchoAnalysis", str);
-    //return str;
+
 }
 
 analysis::EchoAnalysis::~EchoAnalysis() {

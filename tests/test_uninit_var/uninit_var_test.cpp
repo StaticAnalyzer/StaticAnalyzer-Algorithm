@@ -13,6 +13,6 @@ TEST(UnInitVarTest, Test1) {
       analysisFactory.createUninitializedVariableAnalysis();
   uninit_var->analyze();
   json result = uninit_var->getResult();
-  EXPECT_STREQ(result.dump().c_str(), R"({"analyseType":"UninitializedVariableAnalysis","code":0,"fileAnalyseResults":{"/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/example.ast":[{"endColumn":9,"endLine":7,"message":"Uninitialized variable","severity":"warning","startColumn":5,"startLine":7},{"endColumn":13,"endLine":13,"message":"Uninitialized variable","severity":"warning","startColumn":9,"startLine":13}]},"msg":"success"})");
+  EXPECT_STREQ(result.dump().c_str(), R"({"analyseType":"UninitializedVariableAnalysis","code":0,"fileAnalyseResults":{"/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/example.ast":[{"endColumn":9,"endLine":7,"message":"Uninitialized variable","severity":"Warning","startColumn":5,"startLine":7},{"endColumn":13,"endLine":13,"message":"Uninitialized variable","severity":"Warning","startColumn":9,"startLine":13}]},"msg":"success"})");
   std::cout << std::setw(4) << result << std::endl;
 }
