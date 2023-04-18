@@ -1,4 +1,4 @@
-#include "analysis/AnslysisResult.h"
+#include "analysis/AnalysisResult.h"
 
 namespace analysis
 {
@@ -55,6 +55,11 @@ namespace analysis
         return severity;
     }
 
+    const std::string& AnalysisResult::ResultUnit::getMessage() const
+    {
+        return message;
+    }
+
     const std::string& AnalysisResult::getAnalysisType() const
     {
         return analyseType;
@@ -94,7 +99,7 @@ namespace analysis
     void AnalysisResult::addFileResultUnit
         (const std::string& file, AnalysisResult::ResultUnit resultUnit)
     {
-        if (fileAnalyseResults.find(file) != fileAnalyseResults.end()) {
+        if (fileAnalyseResults.find(file) == fileAnalyseResults.end()) {
             fileAnalyseResults.emplace(file, 
                 std::vector<AnalysisResult::ResultUnit>{});
         }

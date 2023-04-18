@@ -10,7 +10,6 @@
 
 #include "analysis/AnalysisResult.h"
 
-using json = nlohmann::json;
 
 namespace analysis {
 

@@ -12,7 +12,32 @@ TEST(UnInitVarTest, Test1) {
   std::unique_ptr<analysis::Analysis> uninit_var =
       analysisFactory.createUninitializedVariableAnalysis();
   uninit_var->analyze();
-  json result = uninit_var->getResult();
-  EXPECT_STREQ(result.dump().c_str(), R"({"analyseType":"UninitializedVariableAnalysis","code":0,"fileAnalyseResults":{"/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/example.ast":[{"endColumn":9,"endLine":7,"message":"Uninitialized variable","severity":"Warning","startColumn":5,"startLine":7},{"endColumn":13,"endLine":13,"message":"Uninitialized variable","severity":"Warning","startColumn":9,"startLine":13}]},"msg":"success"})");
-  std::cout << std::setw(4) << result << std::endl;
+  analysis::AnalysisResult result = uninit_var->getResult();
+  EXPECT_EQ(result.getAnalysisType(), "UninitializedVariableAnalysis");
+  EXPECT_EQ(result.getCode(), 0);
+  EXPECT_EQ(result.getMsg().size(), 0);
+
+  const std::unordered_map<std::string, 
+    std::vector<analysis::AnalysisResult::ResultUnit>>&
+    resultUnitsMap = result.getFileAnalyseResults();
+  
+  EXPECT_EQ(resultUnitsMap.size(), 1);
+
+  const std::vector<analysis::AnalysisResult::ResultUnit>& resultUnits
+    = resultUnitsMap.at("/home/ubuntu/StaticAnalyzer-Algorithm/tests/test_uninit_var/example.ast");
+
+  EXPECT_EQ(resultUnits[0].getStartLine(), 7);
+  EXPECT_EQ(resultUnits[0].getStartColumn(), 5);
+  EXPECT_EQ(resultUnits[0].getEndLine(), 7);
+  EXPECT_EQ(resultUnits[0].getEndColumn(), 9);
+  EXPECT_EQ(resultUnits[0].getMessage(), "Uninitialized variable");
+  EXPECT_EQ(resultUnits[0].getSeverity(), analysis::AnalysisResult::Severity::Warning);
+
+  EXPECT_EQ(resultUnits[1].getStartLine(), 13);
+  EXPECT_EQ(resultUnits[1].getStartColumn(), 9);
+  EXPECT_EQ(resultUnits[1].getEndLine(), 13);
+  EXPECT_EQ(resultUnits[1].getEndColumn(), 13);
+  EXPECT_EQ(resultUnits[1].getMessage(), "Uninitialized variable");
+  EXPECT_EQ(resultUnits[1].getSeverity(), analysis::AnalysisResult::Severity::Warning);
+
 }

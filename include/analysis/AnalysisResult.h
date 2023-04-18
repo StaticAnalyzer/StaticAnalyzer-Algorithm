@@ -3,6 +3,7 @@
 
 #include <unordered_map>
 #include <string>
+#include <vector>
 
 namespace analysis {
 
@@ -42,6 +43,10 @@ public:
             /// @brief the severity of this result
             /// @return Hint, Info, Warning, Error
             Severity getSeverity() const;
+
+            /// @brief get the error message
+            /// @return message of this error
+            const std::string& getMessage() const;
 
             ResultUnit(int startLine, int startColumn, 
                 int endLine, int endColumn,
