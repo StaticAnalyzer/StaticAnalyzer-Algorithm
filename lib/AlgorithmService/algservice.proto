@@ -24,11 +24,15 @@ message AnalyseResultEntry {
   string message = 6;
 }
 
+message FileAnalyseResults {
+  repeated AnalyseResultEntry analyseResults = 1;
+}
+
 message AlgAnalyseResult {
   string analyseType = 1;
   int32 code = 2;
   string msg = 3;
-  map<string, AnalyseResultEntry> fileAnalyseResults = 4;
+  map<string, FileAnalyseResults> fileAnalyseResults = 4;
 }
 
 message AnalyseResponse {

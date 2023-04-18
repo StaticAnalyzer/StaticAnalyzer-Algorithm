@@ -18,8 +18,11 @@ using grpc::Server;
 using grpc::ServerBuilder;
 using grpc::ServerContext;
 using grpc::Status;
-using algservice::JustReturnRequest;
-using algservice::JustReturnResponse;
+using algservice::AnalyseRequest;
+using algservice::AnalyseResponse;
+using algservice::AlgAnalyseResult;
+using algservice::FileAnalyseResults;
+using algservice::AnalyseResultEntry;
 using algservice::AlgService;
 
 #if __has_include(<filesystem>)
@@ -45,21 +48,10 @@ public:
         return result;
     }
 };
-
-bool execCommand(std::string cmd) {
-  std::cout << "execCommand: " << cmd << std::endl;
-  int rt = system(cmd.c_str());
-  return rt == 0;
-}
-
-void clearTempFile(std::string dir) {
-  std::string cmd = "rm -rf " + dir;
-  execCommand(cmd);
-}
  
 class AlgServiceImpl final : public AlgService::Service {
-  Status JustReturn(ServerContext* context, const JustReturnRequest* request,
-                    JustReturnResponse* reply) override {
+  Status Analyse(ServerContext* context, const AnalyseRequest* request,
+                    AnalyseResponse* reply) override {
     std::string file = request->file();
     std::string config = request->config();
 
@@ -76,7 +68,12 @@ class AlgServiceImpl final : public AlgService::Service {
 
     // 解压缩文件
     std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + source_dir.string();
-    if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "tar file invalid");
+    if(!execCommand(cmd)) {
+      clearTempFile(project_root.string());
+      reply->set_code(-1);
+      reply->set_msg("解压缩文件失败");
+      return Status::OK;
+    }
 
     // 保存配置文件
     std::string config_filename = "config.txt";
@@ -99,7 +96,9 @@ class AlgServiceImpl final : public AlgService::Service {
         std::string cmd = "clang++ -emit-ast -c -I " + (source_dir/"include/").string() + " " + ite.path().string() + " -o " + ast_path;
         if(!execCommand(cmd)) {
           clearTempFile(project_root.string());
-          return Status(grpc::StatusCode::INTERNAL, "execCommand failed");
+          reply->set_code(-1);
+          reply->set_msg("生成ast文件失败");
+          return Status::OK;
         }
         ast_list.push_back(ast_path);
       }
@@ -120,20 +119,84 @@ class AlgServiceImpl final : public AlgService::Service {
           project_root / "config.txt");
       std::unique_ptr<analysis::Analysis> uni = analysisFactory.createUninitializedVariableAnalysis();
       uni->analyze();
-      *reply->mutable_result() = uni->getResult().dump();
+      const auto &uni_result = uni->getResult();
+
+      AlgAnalyseResult&& alg_result = convertToAlgAnalyseResult(uni_result);
+      reply->add_alganalyseresults()->CopyFrom(alg_result);
     }
-    catch(const std::exception& e)
+    catch (const std::exception &e)
     {
       std::cerr << e.what() << '\n';
       clearTempFile(project_root.string());
-      return Status(grpc::StatusCode::INTERNAL, "Analyse failed");
+      reply->set_code(-1);
+      reply->set_msg(std::string("执行异常：") + e.what());
+      return Status::OK;
     }
 
     // 清除临时文件
-    cmd = "rm -rf " + project_root.string();
-    if(!execCommand(cmd)) return Status(grpc::StatusCode::INTERNAL, "Remove temp file failed");
+    clearTempFile(project_root.string());
 
+    reply->set_code(0);
     return Status::OK;
+  }
+
+  bool execCommand(std::string cmd) {
+    std::cout << "execCommand: " << cmd << std::endl;
+    int rt = system(cmd.c_str());
+    return rt == 0;
+  }
+
+  void clearTempFile(std::string dir) {
+    std::string cmd = "rm -rf " + dir;
+    execCommand(cmd);
+  }
+
+  AlgAnalyseResult convertToAlgAnalyseResult(const analysis::AnalysisResult& result) {
+    AlgAnalyseResult alg_result;
+
+    alg_result.set_analysetype(result.getAnalysisType());
+    alg_result.set_code(result.getCode());
+    alg_result.set_msg(result.getMsg());
+
+    for(const auto& [filename, file_result_raw] : result.getFileAnalyseResults()) {
+      FileAnalyseResults file_result;
+      for(const auto& result_entry_raw : file_result_raw) {
+        AnalyseResultEntry&& result_entry = convertToAnalyseResultEntry(result_entry_raw);
+        file_result.add_analyseresults()->CopyFrom(result_entry);
+      }
+      alg_result.mutable_fileanalyseresults()->emplace(filename, file_result);
+    }
+
+    return alg_result;
+  }
+
+  AnalyseResultEntry convertToAnalyseResultEntry(const analysis::AnalysisResult::ResultUnit& entry) {
+    AnalyseResultEntry result_entry;
+
+    result_entry.set_startline(entry.getStartLine());
+    result_entry.set_endline(entry.getEndLine());
+    result_entry.set_startcolumn(entry.getStartColumn());
+    result_entry.set_endcolumn(entry.getEndColumn());
+    result_entry.set_message(entry.getMessage());
+    result_entry.set_severity(toString(entry.getSeverity()));
+
+    return result_entry;
+  }
+
+  std::string toString(const analysis::AnalysisResult::Severity servity) {
+    switch (servity)
+    {
+    case analysis::AnalysisResult::Severity::Error:
+      return "Error";
+    case analysis::AnalysisResult::Severity::Warning:
+      return "Warning";
+    case analysis::AnalysisResult::Severity::Info:
+      return "Info";
+    case analysis::AnalysisResult::Severity::Hint:
+      return "Hint";
+    default:
+      return "UNKNOWN";
+    }
   }
 };
 
