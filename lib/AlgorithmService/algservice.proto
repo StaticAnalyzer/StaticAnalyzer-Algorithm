@@ -7,14 +7,32 @@ option java_outer_classname = "AlgServiceProto";
 package algservice;
 
 service AlgService {
-   rpc JustReturn (JustReturnRequest) returns (JustReturnResponse) {}
+  rpc Analyse (AnalyseRequest) returns (AnalyseResponse) {}
 };
 
-message JustReturnRequest {
-    bytes file = 1;
-    string config = 2;
+message AnalyseRequest {
+  bytes file = 1;
+  string config = 2;
 }
 
-message JustReturnResponse {
-    string result = 1;
+message AnalyseResultEntry {
+  int32 startLine = 1;
+  int32 endLine = 2;
+  int32 startColumn = 3;
+  int32 endColumn = 4;
+  string severity = 5;
+  string message = 6;
+}
+
+message AlgAnalyseResult {
+  string analyseType = 1;
+  int32 code = 2;
+  string msg = 3;
+  map<string, AnalyseResultEntry> fileAnalyseResults = 4;
+}
+
+message AnalyseResponse {
+  int32 code = 1;
+  string msg = 2;
+  repeated AlgAnalyseResult algAnalyseResults = 3;
 }
