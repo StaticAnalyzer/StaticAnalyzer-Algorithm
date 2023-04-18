@@ -121,7 +121,7 @@ class AlgServiceImpl final : public AlgService::Service {
       uni->analyze();
       const auto &uni_result = uni->getResult();
 
-      AlgAnalyseResult&& alg_result = convertToAlgAnalyseResult(uni_result);
+      AlgAnalyseResult&& alg_result = convertToAlgAnalyseResult(uni_result, project_root.string());
       reply->add_alganalyseresults()->CopyFrom(alg_result);
     }
     catch (const std::exception &e)
@@ -140,18 +140,18 @@ class AlgServiceImpl final : public AlgService::Service {
     return Status::OK;
   }
 
-  bool execCommand(std::string cmd) {
+  static bool execCommand(std::string cmd) {
     std::cout << "execCommand: " << cmd << std::endl;
     int rt = system(cmd.c_str());
     return rt == 0;
   }
 
-  void clearTempFile(std::string dir) {
+  static void clearTempFile(std::string dir) {
     std::string cmd = "rm -rf " + dir;
     execCommand(cmd);
   }
 
-  AlgAnalyseResult convertToAlgAnalyseResult(const analysis::AnalysisResult& result) {
+  static AlgAnalyseResult convertToAlgAnalyseResult(const analysis::AnalysisResult& result, const std::string &root) {
     AlgAnalyseResult alg_result;
 
     alg_result.set_analysetype(result.getAnalysisType());
@@ -164,13 +164,17 @@ class AlgServiceImpl final : public AlgService::Service {
         AnalyseResultEntry&& result_entry = convertToAnalyseResultEntry(result_entry_raw);
         file_result.add_analyseresults()->CopyFrom(result_entry);
       }
-      alg_result.mutable_fileanalyseresults()->emplace(filename, file_result);
+      std::string real_filename(filename);
+      removePrefix(real_filename, root);
+      removePrefix(real_filename, "/");
+
+      alg_result.mutable_fileanalyseresults()->emplace(real_filename, file_result);
     }
 
     return alg_result;
   }
 
-  AnalyseResultEntry convertToAnalyseResultEntry(const analysis::AnalysisResult::ResultUnit& entry) {
+  static AnalyseResultEntry convertToAnalyseResultEntry(const analysis::AnalysisResult::ResultUnit& entry) {
     AnalyseResultEntry result_entry;
 
     result_entry.set_startline(entry.getStartLine());
@@ -183,7 +187,7 @@ class AlgServiceImpl final : public AlgService::Service {
     return result_entry;
   }
 
-  std::string toString(const analysis::AnalysisResult::Severity servity) {
+  static std::string toString(const analysis::AnalysisResult::Severity servity) {
     switch (servity)
     {
     case analysis::AnalysisResult::Severity::Error:
@@ -197,6 +201,11 @@ class AlgServiceImpl final : public AlgService::Service {
     default:
       return "UNKNOWN";
     }
+  }
+
+  static void removePrefix(std::string& str, const std::string& prefix) {
+    if(str.rfind(prefix, 0) == 0)
+      str.erase(0, prefix.length());
   }
 };
 
