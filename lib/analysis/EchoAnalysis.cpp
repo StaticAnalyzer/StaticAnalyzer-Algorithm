@@ -13,27 +13,27 @@ analysis::EchoAnalysis::EchoAnalysis(ASTResource& resource, ASTManager& manager,
 void analysis::EchoAnalysis::analyze() 
 {   
     std::string str;
-    llvm::raw_string_ostream result(str);
+    llvm::raw_string_ostream buffer(str);
 
-    result << "----------------------------------------------------------\n";
-    result << "CFG of all functions:\n";
-    result << "----------------------------------------------------------\n";
+    buffer << "----------------------------------------------------------\n";
+    buffer << "CFG of all functions:\n";
+    buffer << "----------------------------------------------------------\n";
 
     for (ASTFunction* fun : resource.getFunctions()) {
         const FunctionDecl* funDecl = manager.getFunctionDecl(fun);
-        result << "CFG of function " << funDecl->getQualifiedNameAsString() 
+        buffer << "CFG of function " << funDecl->getQualifiedNameAsString() 
             << ":\n---------------------\n";
         std::unique_ptr<clang::CFG>& cfg = manager.getCFG(fun);
         LangOptions LO;
         LO.CPlusPlus = true;
-        cfg->print(result, LO, false);
+        cfg->print(buffer, LO, false);
     }
-    result << "----------------------------------------------------------\n";
-    result << "Call Graph:\n";
-    result << "----------------------------------------------------------\n";
-    callGraph.printCallGraph(result);
-    result << "----------------------------------------------------------\n";
-    
+    buffer << "----------------------------------------------------------\n";
+    buffer << "Call Graph:\n";
+    buffer << "----------------------------------------------------------\n";
+    callGraph.printCallGraph(buffer);
+    buffer << "----------------------------------------------------------\n";
+    buffer.flush();
     initializeFailedResult("EchoAnalysis", str);
 
 }

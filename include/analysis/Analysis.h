@@ -4,27 +4,20 @@
 #include <string>
 #include <unordered_map>
 
-#include "nlohmann/json.h"
-
 #include "framework/ASTManager.h"
 #include "framework/CallGraph.h"
 #include "framework/Common.h"
 
-using json = nlohmann::json;
+#include "analysis/AnalysisResult.h"
+
 
 namespace analysis {
 
 /// @brief interface class for all analysis
 class Analysis 
 {
-protected:
-    enum class Severity {
-        Hint, Info, Warning, Error
-    };
-
 private:
-    json result;
-    static const std::unordered_map<Severity, std::string> enumToString;
+    AnalysisResult result;
 
 protected:
     ASTResource& resource;
@@ -51,7 +44,7 @@ protected:
     /// @param message error message
     void addFileResultEntry(const std::string& file, 
         int startLine, int startColumn, int endLine, int endColumn, 
-        Severity severity, const std::string& message);
+        AnalysisResult::Severity severity, const std::string& message);
 
 public:
     Analysis(ASTResource& resource, ASTManager& manager, CallGraph& callGraph, Config& configure);
@@ -63,7 +56,7 @@ public:
     
     /// @brief get the result of analysis
     /// @return a json object
-    const json& getResult();
+    const AnalysisResult& getResult();
 };
 
 /// @brief echo analysis simply returns the cfg and cg of input program

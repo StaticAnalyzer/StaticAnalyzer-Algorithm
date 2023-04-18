@@ -83,8 +83,6 @@ static void recursiveVisitBlock(const CFGBlock *block,
 }
 
 void analysis::UninitializedVariableAnalysis::analyze() {
-  // std::string str;
-  // llvm::raw_string_ostream result(str);
 
   for (ASTFunction *fun : resource.getFunctions()) {
     FunctionDecl *funDecl = manager.getFunctionDecl(fun);
@@ -105,11 +103,13 @@ void analysis::UninitializedVariableAnalysis::analyze() {
       SourceLocation startLoc = VD->getBeginLoc();
       SourceLocation endLoc = VD->getEndLoc();
       SourceManager &SM = manager.getASTContext(fun)->getSourceManager();
+      
       addFileResultEntry(fun->getASTFile()->getAST(),
         SM.getPresumedLineNumber(startLoc), SM.getPresumedColumnNumber(startLoc),
         SM.getPresumedLineNumber(endLoc), SM.getPresumedColumnNumber(endLoc),
-        Severity::Warning, std::string("Uninitialized variable")
+        AnalysisResult::Severity::Warning, std::string("Uninitialized variable")
         );
     }
   }
+
 }
