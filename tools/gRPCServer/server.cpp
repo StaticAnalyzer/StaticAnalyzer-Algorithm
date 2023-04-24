@@ -12,7 +12,7 @@
 
 #include "algservice.grpc.pb.h"
 
-#include "analysis/AnalysisFactory.h"
+#include "myanalysis/AnalysisFactory.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -114,10 +114,10 @@ class AlgServiceImpl final : public AlgService::Service {
     // 执行算法
     try
     {
-      analysis::AnalysisFactory analysisFactory(
+      my_analysis::AnalysisFactory analysisFactory(
           project_root / "astlist.txt",
           project_root / "config.txt");
-      std::unique_ptr<analysis::Analysis> uni = analysisFactory.createUninitializedVariableAnalysis();
+      std::unique_ptr<my_analysis::Analysis> uni = analysisFactory.createUninitializedVariableAnalysis();
       uni->analyze();
       const auto &uni_result = uni->getResult();
 
@@ -151,7 +151,7 @@ class AlgServiceImpl final : public AlgService::Service {
     execCommand(cmd);
   }
 
-  static AlgAnalyseResult convertToAlgAnalyseResult(const analysis::AnalysisResult& result, const std::string &root) {
+  static AlgAnalyseResult convertToAlgAnalyseResult(const my_analysis::AnalysisResult& result, const std::string &root) {
     AlgAnalyseResult alg_result;
 
     alg_result.set_analysetype(result.getAnalysisType());
@@ -174,7 +174,7 @@ class AlgServiceImpl final : public AlgService::Service {
     return alg_result;
   }
 
-  static AnalyseResultEntry convertToAnalyseResultEntry(const analysis::AnalysisResult::ResultUnit& entry) {
+  static AnalyseResultEntry convertToAnalyseResultEntry(const my_analysis::AnalysisResult::ResultUnit& entry) {
     AnalyseResultEntry result_entry;
 
     result_entry.set_startline(entry.getStartLine());
@@ -187,16 +187,16 @@ class AlgServiceImpl final : public AlgService::Service {
     return result_entry;
   }
 
-  static std::string toString(const analysis::AnalysisResult::Severity servity) {
+  static std::string toString(const my_analysis::AnalysisResult::Severity servity) {
     switch (servity)
     {
-    case analysis::AnalysisResult::Severity::Error:
+    case my_analysis::AnalysisResult::Severity::Error:
       return "Error";
-    case analysis::AnalysisResult::Severity::Warning:
+    case my_analysis::AnalysisResult::Severity::Warning:
       return "Warning";
-    case analysis::AnalysisResult::Severity::Info:
+    case my_analysis::AnalysisResult::Severity::Info:
       return "Info";
-    case analysis::AnalysisResult::Severity::Hint:
+    case my_analysis::AnalysisResult::Severity::Hint:
       return "Hint";
     default:
       return "UNKNOWN";

@@ -1,7 +1,7 @@
-#include "analysis/AnalysisResult.h"
+#include "myanalysis/AnalysisResult.h"
 
-namespace analysis
-{
+namespace my_analysis {
+
     AnalysisResult::ResultUnit::ResultUnit(int startLine, int startColumn, 
         int endLine, int endColumn, Severity severity, const std::string& message)
         :startLine(startLine), startColumn(startColumn), 

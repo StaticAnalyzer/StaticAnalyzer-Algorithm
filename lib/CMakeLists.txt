@@ -1,2 +1,2 @@
-add_subdirectory(analysis)
+add_subdirectory(myanalysis)
 add_subdirectory(AlgorithmService)

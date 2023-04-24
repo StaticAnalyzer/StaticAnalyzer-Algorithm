@@ -1,16 +1,10 @@
 #include <list>
 
-#include "analysis/Analysis.h"
+#include "myanalysis/Analysis.h"
 
-namespace analysis {
+namespace my_analysis {
 
-    Analysis::Analysis(ASTResource& resource, ASTManager& manager, CallGraph& callGraph, Config& configure)
-        :resource(resource), manager(manager), callGraph(callGraph), configure(configure)
-    {
-
-    }
-
-    const AnalysisResult& Analysis::getResult()
+    const AnalysisResult& Analysis::getResult() const
     {
         return result;
     }
