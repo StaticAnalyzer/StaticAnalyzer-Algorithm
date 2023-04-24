@@ -1,3 +1,5 @@
 [submodule "libanalyzer"]
 	path = libanalyzer
 	url = https://github.com/JacyCui/cpp-static-analyzer.git
+	branch = main
+    update = rebase
