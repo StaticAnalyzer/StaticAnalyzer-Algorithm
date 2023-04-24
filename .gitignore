@@ -1,7 +1,5 @@
 cmake-build-debug/
 build/
 .vscode
-example.ast
-time.txt
-outTest.dot
 .DS_Store
+.idea

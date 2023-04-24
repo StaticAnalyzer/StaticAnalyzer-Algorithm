@@ -1,2 +1,2 @@
-add_subdirectory(TemplateChecker)
 add_subdirectory(gRPCServer)
+
