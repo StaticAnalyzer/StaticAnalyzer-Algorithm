@@ -2,7 +2,7 @@ add_library(myanalysis
         Analysis.cpp
         AnalysisFactory.cpp
         AnalysisResult.cpp
-        UninitializedVariableAnalysis.cpp
+        AlwaysFailedAnalysis.cpp
         )
 
 target_link_libraries(myanalysis

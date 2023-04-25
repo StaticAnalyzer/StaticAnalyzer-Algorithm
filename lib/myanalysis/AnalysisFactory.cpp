@@ -12,4 +12,9 @@ namespace my_analysis {
         al::World::initialize(sourceDir, includeDir, std);
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createAlwaysFailedAnalysis() const
+    {
+        return std::make_unique<AlwaysFailedAnalysis>();
+    }
+
 }

@@ -26,7 +26,11 @@ namespace my_analysis {
         AnalysisFactory(const std::string& sourceDir, const std::string& includeDir="",
                         const std::string& std=std::string("c++98"));
 
-        [[nodiscard]] std::unique_ptr<Analysis> createUninitializedVariableAnalysis() const;
+        /**
+         * @brief for temporary
+         * @return a always failed analysis used for test
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createAlwaysFailedAnalysis() const;
 
     };
 

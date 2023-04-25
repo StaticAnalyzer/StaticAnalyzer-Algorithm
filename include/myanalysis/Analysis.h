@@ -65,13 +65,13 @@ namespace my_analysis {
     };
 
     /**
-     * @class UninitializedVariableAnalysis
-     * @brief uninitialized variable analysis detects variables used before define
+     * @class AlwaysFailedAnalysis
+     * @brief always failed analysis used for test
      */
-    class UninitializedVariableAnalysis: public Analysis {
+    class AlwaysFailedAnalysis: public Analysis {
     public:
 
-        UninitializedVariableAnalysis();
+        AlwaysFailedAnalysis();
 
         void analyze() override;
 
