@@ -11,9 +11,9 @@ target_include_directories(mytests
         ${CMAKE_SOURCE_DIR}/include
         )
 
-add_test(NAME doctest COMMAND mytests)
+add_test(NAME mydoctest COMMAND mytests)
 
-set_tests_properties(doctest
+set_tests_properties(mydoctest
         PROPERTIES
         WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         )
