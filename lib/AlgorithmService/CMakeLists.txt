@@ -19,12 +19,7 @@ target_link_libraries(algproto
         protobuf::libprotobuf
         gRPC::grpc
         gRPC::grpc++
-
-        checkers
-        framework
-        ${CLANG_LIBS}
-        ${LLVM_LIBS}
-        ${OTHER_LIBS}
+        myanalysis
 )
 target_include_directories(algproto PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

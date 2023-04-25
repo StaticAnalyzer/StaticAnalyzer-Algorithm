@@ -12,6 +12,7 @@ namespace my_analysis {
     /**
      * @brief The factory class to generate different analysis
      * based on the same program.
+     * !!! there should be only one factory in the memory at the same time.
      */
     class AnalysisFactory final {
     public:

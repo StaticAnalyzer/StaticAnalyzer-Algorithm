@@ -28,6 +28,7 @@ namespace my_analysis {
         endColumn = resultUnit.endColumn; 
         severity = resultUnit.severity;
         message = resultUnit.message;
+        return *this;
     }
             
     int AnalysisResult::ResultUnit::getStartLine() const
