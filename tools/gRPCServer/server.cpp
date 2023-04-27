@@ -167,6 +167,9 @@ class AlgServiceImpl final : public AlgService::Service {
       std::string real_filename(filename);
       removePrefix(real_filename, root);
       removePrefix(real_filename, "/");
+      removePrefix(real_filename, "source");
+      removePrefix(real_filename, "/");
+      removeSuffix(real_filename, ".ast");
 
       alg_result.mutable_fileanalyseresults()->emplace(real_filename, file_result);
     }
@@ -206,6 +209,11 @@ class AlgServiceImpl final : public AlgService::Service {
   static void removePrefix(std::string& str, const std::string& prefix) {
     if(str.rfind(prefix, 0) == 0)
       str.erase(0, prefix.length());
+  }
+
+  static void removeSuffix(std::string& str, const std::string& suffix) {
+    if(str.length() >= suffix.length() && str.rfind(suffix) == str.length() - suffix.length())
+      str.erase(str.length() - suffix.length());
   }
 };
 

@@ -83,6 +83,7 @@ static void recursiveVisitBlock(const CFGBlock *block,
 }
 
 void analysis::UninitializedVariableAnalysis::analyze() {
+  initializeSuccessfulResult(std::string("UninitializedVariableAnalysis"));
 
   for (ASTFunction *fun : resource.getFunctions()) {
     FunctionDecl *funDecl = manager.getFunctionDecl(fun);
@@ -96,8 +97,6 @@ void analysis::UninitializedVariableAnalysis::analyze() {
     if (uninit_vars.empty()) {
       continue;
     }
-
-    initializeSuccessfulResult(std::string("UninitializedVariableAnalysis"));
 
     for (const VarDecl *VD : uninit_vars) {
       SourceLocation startLoc = VD->getBeginLoc();
