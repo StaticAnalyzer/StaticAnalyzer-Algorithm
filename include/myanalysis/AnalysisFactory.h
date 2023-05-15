@@ -36,7 +36,7 @@ namespace my_analysis {
          * @brief create uninitialized variable analysis
          * @return a uninitialized variable analysis
          */
-        [[nodiscard]] std::unique_ptr<Analysis> createUninitializedVariableAnalysis() const;
+        [[nodiscard]] std::unique_ptr<Analysis> createUseBeforeDefAnalysis() const;
 
     };
 

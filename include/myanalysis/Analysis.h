@@ -81,10 +81,10 @@ namespace my_analysis {
      * @class UninitializedVariableAnalysis
      * @brief detect uninitialized variable
      */
-    class UninitializedVariableAnalysis: public Analysis {
+    class UseBeforeDefAnalysis: public Analysis {
     public:
 
-        UninitializedVariableAnalysis();
+        UseBeforeDefAnalysis();
 
         void analyze() override;
 

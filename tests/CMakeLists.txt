@@ -1,7 +1,7 @@
 add_executable(mytests
         main.cpp
         TestInitialization.cpp
-        TestUnitializedVariable.cpp)
+        TestUseBeforeDef.cpp)
 
 target_link_libraries(mytests
         myanalysis

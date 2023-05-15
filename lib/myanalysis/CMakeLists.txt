@@ -1,9 +1,10 @@
 add_library(myanalysis
+        dataflow/UseBeforeDef.cpp
         Analysis.cpp
         AnalysisFactory.cpp
         AnalysisResult.cpp
         AlwaysFailedAnalysis.cpp
-        UninitializedVariableAnalysis.cpp
+        UseBeforeDefAnalysis.cpp
         )
 
 target_link_libraries(myanalysis
