@@ -17,4 +17,9 @@ namespace my_analysis {
         return std::make_unique<AlwaysFailedAnalysis>();
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createUninitializedVariableAnalysis() const
+    {
+        return std::make_unique<UninitializedVariableAnalysis>();
+    }
+
 }

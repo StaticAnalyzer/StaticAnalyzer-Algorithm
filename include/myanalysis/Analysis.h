@@ -77,6 +77,19 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class UninitializedVariableAnalysis
+     * @brief detect uninitialized variable
+     */
+    class UninitializedVariableAnalysis: public Analysis {
+    public:
+
+        UninitializedVariableAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 
