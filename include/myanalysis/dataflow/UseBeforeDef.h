@@ -1,5 +1,5 @@
-#ifndef STATIC_ANALYZER_REACHINGDEFINITION_H
-#define STATIC_ANALYZER_REACHINGDEFINITION_H
+#ifndef STATIC_ANALYZER_USEBEFOREDEF_H
+#define STATIC_ANALYZER_USEBEFOREDEF_H
 
 #include <memory>
 
@@ -9,14 +9,14 @@
 namespace analyzer::analysis::dataflow {
 
     /**
-     * @class ReachingDefinition
-     * @brief reaching definition analysis
+     * @class UseBeforeDef
+     * @brief use before define analysis
      */
     class UseBeforeDef: public AnalysisDriver<fact::SetFact<ir::Var>> {
     public:
 
         /**
-         * @brief constructor for reaching definition analysis
+         * @brief constructor for use before define analysis
          * @param analysisConfig the analysis configuration
          */
         explicit UseBeforeDef(std::unique_ptr<config::AnalysisConfig>& analysisConfig);
@@ -32,4 +32,4 @@ namespace analyzer::analysis::dataflow {
 } // dataflow
 
 
-#endif //STATIC_ANALYZER_REACHINGDEFINITION_H
+#endif //STATIC_ANALYZER_USEBEFOREDEF_H

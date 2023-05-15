@@ -78,8 +78,8 @@ namespace my_analysis {
     };
 
     /**
-     * @class UninitializedVariableAnalysis
-     * @brief detect uninitialized variable
+     * @class UseBeforeDefAnalysis
+     * @brief detect use before define variable
      */
     class UseBeforeDefAnalysis: public Analysis {
     public:

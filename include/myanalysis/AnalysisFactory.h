@@ -33,8 +33,8 @@ namespace my_analysis {
         [[nodiscard]] std::unique_ptr<Analysis> createAlwaysFailedAnalysis() const;
 
         /**
-         * @brief create uninitialized variable analysis
-         * @return a uninitialized variable analysis
+         * @brief create use before define analysis
+         * @return a use before define analysis
          */
         [[nodiscard]] std::unique_ptr<Analysis> createUseBeforeDefAnalysis() const;
 
