@@ -41,4 +41,24 @@ class UseBeforeDefTest {
         return x;
     }
 
+    static void set1(int &a) {
+        a = 1;
+    }
+
+    int UseBeforeDefTest5() {
+        int a;
+        set1(a);
+        return a;
+    }
+
+    static void valSet1(int a) {
+        a = 1;
+    }
+
+    int UseBeforeDefTest6() {
+        int a;
+        valSet1(a);
+        return a;
+    }
+
 };

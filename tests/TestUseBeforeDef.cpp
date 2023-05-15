@@ -3,6 +3,8 @@
 #include "myanalysis/AnalysisResult.h"
 #include "myanalysis/AnalysisFactory.h"
 
+#include <set>
+
 using mar = my_analysis::AnalysisResult;
 
 TEST_SUITE_BEGIN("testUseBeforeDef");
@@ -18,13 +20,20 @@ TEST_CASE("testUseBeforeDefTest") {
     CHECK_EQ(result.getFileAnalyseResults().size(), 1);
     std::vector<mar::ResultUnit> fileResult = result.getFileAnalyseResults().at(
         "resources/UseBeforeDef/UseBeforeDefTest.cpp");
-    CHECK_EQ(fileResult.size(), 3);
-    CHECK_EQ(fileResult[0].getStartLine(), 29);
-    CHECK_EQ(fileResult[0].getMessage(), "Uninitialized variables: c");
-    CHECK_EQ(fileResult[1].getStartLine(), 17);
-    CHECK_EQ(fileResult[1].getMessage(), "Uninitialized variables: y");
-    CHECK_EQ(fileResult[2].getStartLine(), 7);
-    CHECK_EQ(fileResult[2].getMessage(), "Uninitialized variables: b, a");
+    
+    CHECK_EQ(fileResult.size(), 5);
+    std::set<std::pair<int,std::string>> resultSet;
+    for (const auto& unit : fileResult) {
+        resultSet.insert(std::make_pair(unit.getStartLine(), unit.getMessage()));
+    }
+
+    CHECK_EQ(resultSet, std::set<std::pair<int,std::string>>{
+        {7,  "Uninitialized variables: b, a"},
+        {17, "Uninitialized variables: y"},
+        {29, "Uninitialized variables: c"},
+        {60, "Uninitialized variables: a"},
+        {61, "Uninitialized variables: a"}});
+    
 }
 
 TEST_SUITE_END();
