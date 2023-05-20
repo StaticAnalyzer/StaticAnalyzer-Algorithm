@@ -9,6 +9,7 @@
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/health_check_service_interface.h>
+#include <google/protobuf/util/json_util.h>
 
 #include "algservice.grpc.pb.h"
 
@@ -58,8 +59,7 @@ class AlgServiceImpl final : public AlgService::Service {
     // 保存文件到本地
     std::string dir = AlgServiceUtils::RandomStr(20);
     fs::path project_root(dir);
-    fs::path source_dir = project_root / "source";
-    fs::create_directories(source_dir);  // 创建目录
+    fs::create_directories(project_root);  // 创建目录
 
     std::string code_filename = dir + ".tar.gz";
     std::ofstream code_out(project_root / code_filename, std::ios::binary);
@@ -67,7 +67,7 @@ class AlgServiceImpl final : public AlgService::Service {
     code_out.close();
 
     // 解压缩文件
-    std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + source_dir.string();
+    std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + project_root.string();
     if(!execCommand(cmd)) {
       clearTempFile(project_root.string());
       reply->set_code(-1);
@@ -75,49 +75,11 @@ class AlgServiceImpl final : public AlgService::Service {
       return Status::OK;
     }
 
-    // 保存配置文件
-    std::string config_filename = "config.txt";
-    std::ofstream config_out(project_root / config_filename, std::ios::binary);
-    config_out.write(config.c_str(), config.length());
-    config_out.close();
-
-    // 生成ast文件和astList.txt，按默认头文件搜索方式
-    std::list<std::string> ast_list;
-    for(const auto& ite : fs::recursive_directory_iterator(source_dir))
-    {
-      if(ite.status().type() == fs::file_type::regular)
-      {
-        std::string filename = ite.path().filename().string();
-        // filenmae以.cpp .c结尾
-        if(filename.rfind(".cpp") != filename.length() - 4 && filename.rfind(".c") != filename.length() - 2)
-          continue;
-
-        std::string ast_path = ite.path().parent_path().string() + "/" + filename + ".ast";
-        std::string cmd = "clang++ -emit-ast -c -I " + (source_dir/"include/").string() + " " + ite.path().string() + " -o " + ast_path;
-        if(!execCommand(cmd)) {
-          clearTempFile(project_root.string());
-          reply->set_code(-1);
-          reply->set_msg("生成ast文件失败");
-          return Status::OK;
-        }
-        ast_list.push_back(ast_path);
-      }
-    }
-    std::ofstream astlist_out(project_root / "astlist.txt", std::ios::binary);
-    for(const auto& ite : ast_list)
-    {
-      astlist_out << ite << std::endl;
-    }
-    astlist_out.close();
-
-
     // 执行算法
     try
     {
-      my_analysis::AnalysisFactory analysisFactory(
-          project_root / "astlist.txt",
-          project_root / "config.txt");
-      std::unique_ptr<my_analysis::Analysis> uni = analysisFactory.createUninitializedVariableAnalysis();
+      my_analysis::AnalysisFactory analysisFactory(project_root.string());
+      std::unique_ptr<my_analysis::Analysis> uni = analysisFactory.createUseBeforeDefAnalysis();
       uni->analyze();
       const auto &uni_result = uni->getResult();
 
