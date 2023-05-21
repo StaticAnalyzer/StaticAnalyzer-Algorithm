@@ -38,6 +38,11 @@ namespace my_analysis {
          */
         [[nodiscard]] std::unique_ptr<Analysis> createUseBeforeDefAnalysis() const;
 
+        /**
+         * @brief create arithmetic intensity reduce analysis
+         * @return a arithmetic intensity reduce analysis
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createArithmeticIntensityAnalysis() const;
     };
 
 } // my analysis

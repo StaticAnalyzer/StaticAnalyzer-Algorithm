@@ -5,7 +5,7 @@ add_library(myanalysis
         AnalysisResult.cpp
         AlwaysFailedAnalysis.cpp
         UseBeforeDefAnalysis.cpp
-        )
+        ArithmeticIntensityAnalysis.cpp)
 
 target_link_libraries(myanalysis
         libanalyzer

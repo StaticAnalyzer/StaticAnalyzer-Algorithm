@@ -90,6 +90,19 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class ArithmeticIntensityAnalysis
+     * @brief reduce arithmetic intensity
+     */
+    class ArithmeticIntensityAnalysis: public Analysis {
+    public:
+
+        ArithmeticIntensityAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 

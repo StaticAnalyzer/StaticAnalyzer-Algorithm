@@ -22,4 +22,8 @@ namespace my_analysis {
         return std::make_unique<UseBeforeDefAnalysis>();
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createArithmeticIntensityAnalysis() const {
+        return std::make_unique<ArithmeticIntensityAnalysis>();
+    }
+
 }

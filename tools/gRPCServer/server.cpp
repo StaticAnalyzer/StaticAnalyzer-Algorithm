@@ -27,13 +27,15 @@ using algservice::AnalyseResultEntry;
 using algservice::AlgService;
 
 #if __has_include(<filesystem>)
-  #include <filesystem>
-  namespace fs = std::filesystem;
+
+#include <filesystem>
+
+namespace fs = std::filesystem;
 #elif __has_include(<experimental/filesystem>)
-  #include <experimental/filesystem> 
-  namespace fs = std::experimental::filesystem;
+#include <experimental/filesystem>
+namespace fs = std::experimental::filesystem;
 #else
-  error "Missing the <filesystem> header."
+error "Missing the <filesystem> header."
 #endif
 
 class AlgServiceUtils {
@@ -44,151 +46,154 @@ public:
         std::mt19937 generator(rd());
         std::string result;
         result.resize(len);
-        for (int i = 0; i < len; i++) 
+        for (int i = 0; i < len; i++)
             result[i] = str[generator() % (str.size() - 1)];
         return result;
     }
 };
- 
+
 class AlgServiceImpl final : public AlgService::Service {
-  Status Analyse(ServerContext* context, const AnalyseRequest* request,
-                    AnalyseResponse* reply) override {
-    std::string file = request->file();
-    std::string config = request->config();
+    Status Analyse(ServerContext *context, const AnalyseRequest *request,
+                   AnalyseResponse *reply) override {
+        std::string file = request->file();
+        std::string config = request->config();
 
-    // 保存文件到本地
-    std::string dir = AlgServiceUtils::RandomStr(20);
-    fs::path project_root(dir);
-    fs::create_directories(project_root);  // 创建目录
+        // 保存文件到本地
+        std::string dir = AlgServiceUtils::RandomStr(20);
+        fs::path project_root(dir);
+        fs::create_directories(project_root);  // 创建目录
 
-    std::string code_filename = dir + ".tar.gz";
-    std::ofstream code_out(project_root / code_filename, std::ios::binary);
-    code_out.write(file.c_str(), file.length());
-    code_out.close();
+        std::string code_filename = dir + ".tar.gz";
+        std::ofstream code_out(project_root / code_filename, std::ios::binary);
+        code_out.write(file.c_str(), file.length());
+        code_out.close();
 
-    // 解压缩文件
-    std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + project_root.string();
-    if(!execCommand(cmd)) {
-      clearTempFile(project_root.string());
-      reply->set_code(-1);
-      reply->set_msg("解压缩文件失败");
-      return Status::OK;
+        // 解压缩文件
+        std::string cmd = "tar -zxvf " + (project_root / code_filename).string() + " -C " + project_root.string();
+        if (!execCommand(cmd)) {
+            clearTempFile(project_root.string());
+            reply->set_code(-1);
+            reply->set_msg("解压缩文件失败");
+            return Status::OK;
+        }
+
+        // 执行算法
+        try {
+            std::vector<std::unique_ptr<my_analysis::Analysis>> analysisList;
+            my_analysis::AnalysisFactory analysisFactory(project_root.string());
+
+            analysisList.push_back(analysisFactory.createUseBeforeDefAnalysis());
+            analysisList.push_back(analysisFactory.createArithmeticIntensityAnalysis());
+
+            for (const auto& analysis : analysisList) {
+                analysis->analyze();
+                const auto &uni_result = analysis->getResult();
+
+                AlgAnalyseResult &&alg_result = convertToAlgAnalyseResult(uni_result, project_root.string());
+                reply->add_alganalyseresults()->CopyFrom(alg_result);
+            }
+        }
+        catch (const std::exception &e) {
+            std::cerr << e.what() << '\n';
+            clearTempFile(project_root.string());
+            reply->set_code(-1);
+            reply->set_msg(std::string("执行异常：") + e.what());
+            return Status::OK;
+        }
+
+        // 清除临时文件
+        clearTempFile(project_root.string());
+
+        reply->set_code(0);
+        return Status::OK;
     }
 
-    // 执行算法
-    try
-    {
-      my_analysis::AnalysisFactory analysisFactory(project_root.string());
-      std::unique_ptr<my_analysis::Analysis> uni = analysisFactory.createUseBeforeDefAnalysis();
-      uni->analyze();
-      const auto &uni_result = uni->getResult();
-
-      AlgAnalyseResult&& alg_result = convertToAlgAnalyseResult(uni_result, project_root.string());
-      reply->add_alganalyseresults()->CopyFrom(alg_result);
-    }
-    catch (const std::exception &e)
-    {
-      std::cerr << e.what() << '\n';
-      clearTempFile(project_root.string());
-      reply->set_code(-1);
-      reply->set_msg(std::string("执行异常：") + e.what());
-      return Status::OK;
+    static bool execCommand(std::string cmd) {
+        std::cout << "execCommand: " << cmd << std::endl;
+        int rt = system(cmd.c_str());
+        return rt == 0;
     }
 
-    // 清除临时文件
-    clearTempFile(project_root.string());
-
-    reply->set_code(0);
-    return Status::OK;
-  }
-
-  static bool execCommand(std::string cmd) {
-    std::cout << "execCommand: " << cmd << std::endl;
-    int rt = system(cmd.c_str());
-    return rt == 0;
-  }
-
-  static void clearTempFile(std::string dir) {
-    std::string cmd = "rm -rf " + dir;
-    execCommand(cmd);
-  }
-
-  static AlgAnalyseResult convertToAlgAnalyseResult(const my_analysis::AnalysisResult& result, const std::string &root) {
-    AlgAnalyseResult alg_result;
-
-    alg_result.set_analysetype(result.getAnalysisType());
-    alg_result.set_code(result.getCode());
-    alg_result.set_msg(result.getMsg());
-
-    for(const auto& [filename, file_result_raw] : result.getFileAnalyseResults()) {
-      FileAnalyseResults file_result;
-      for(const auto& result_entry_raw : file_result_raw) {
-        AnalyseResultEntry&& result_entry = convertToAnalyseResultEntry(result_entry_raw);
-        file_result.add_analyseresults()->CopyFrom(result_entry);
-      }
-      std::string real_filename(filename);
-      removePrefix(real_filename, root);
-      removePrefix(real_filename, "/");
-
-      alg_result.mutable_fileanalyseresults()->emplace(real_filename, file_result);
+    static void clearTempFile(std::string dir) {
+        std::string cmd = "rm -rf " + dir;
+        execCommand(cmd);
     }
 
-    return alg_result;
-  }
+    static AlgAnalyseResult
+    convertToAlgAnalyseResult(const my_analysis::AnalysisResult &result, const std::string &root) {
+        AlgAnalyseResult alg_result;
 
-  static AnalyseResultEntry convertToAnalyseResultEntry(const my_analysis::AnalysisResult::ResultUnit& entry) {
-    AnalyseResultEntry result_entry;
+        alg_result.set_analysetype(result.getAnalysisType());
+        alg_result.set_code(result.getCode());
+        alg_result.set_msg(result.getMsg());
 
-    result_entry.set_startline(entry.getStartLine());
-    result_entry.set_endline(entry.getEndLine());
-    result_entry.set_startcolumn(entry.getStartColumn());
-    result_entry.set_endcolumn(entry.getEndColumn());
-    result_entry.set_message(entry.getMessage());
-    result_entry.set_severity(toString(entry.getSeverity()));
+        for (const auto &[filename, file_result_raw]: result.getFileAnalyseResults()) {
+            FileAnalyseResults file_result;
+            for (const auto &result_entry_raw: file_result_raw) {
+                AnalyseResultEntry &&result_entry = convertToAnalyseResultEntry(result_entry_raw);
+                file_result.add_analyseresults()->CopyFrom(result_entry);
+            }
+            std::string real_filename(filename);
+            removePrefix(real_filename, root);
+            removePrefix(real_filename, "/");
 
-    return result_entry;
-  }
+            alg_result.mutable_fileanalyseresults()->emplace(real_filename, file_result);
+        }
 
-  static std::string toString(const my_analysis::AnalysisResult::Severity servity) {
-    switch (servity)
-    {
-    case my_analysis::AnalysisResult::Severity::Error:
-      return "Error";
-    case my_analysis::AnalysisResult::Severity::Warning:
-      return "Warning";
-    case my_analysis::AnalysisResult::Severity::Info:
-      return "Info";
-    case my_analysis::AnalysisResult::Severity::Hint:
-      return "Hint";
-    default:
-      return "UNKNOWN";
+        return alg_result;
     }
-  }
 
-  static void removePrefix(std::string& str, const std::string& prefix) {
-    if(str.rfind(prefix, 0) == 0)
-      str.erase(0, prefix.length());
-  }
+    static AnalyseResultEntry convertToAnalyseResultEntry(const my_analysis::AnalysisResult::ResultUnit &entry) {
+        AnalyseResultEntry result_entry;
+
+        result_entry.set_startline(entry.getStartLine());
+        result_entry.set_endline(entry.getEndLine());
+        result_entry.set_startcolumn(entry.getStartColumn());
+        result_entry.set_endcolumn(entry.getEndColumn());
+        result_entry.set_message(entry.getMessage());
+        result_entry.set_severity(toString(entry.getSeverity()));
+
+        return result_entry;
+    }
+
+    static std::string toString(const my_analysis::AnalysisResult::Severity servity) {
+        switch (servity) {
+            case my_analysis::AnalysisResult::Severity::Error:
+                return "Error";
+            case my_analysis::AnalysisResult::Severity::Warning:
+                return "Warning";
+            case my_analysis::AnalysisResult::Severity::Info:
+                return "Info";
+            case my_analysis::AnalysisResult::Severity::Hint:
+                return "Hint";
+            default:
+                return "UNKNOWN";
+        }
+    }
+
+    static void removePrefix(std::string &str, const std::string &prefix) {
+        if (str.rfind(prefix, 0) == 0)
+            str.erase(0, prefix.length());
+    }
 };
 
-int main()
-{
-  std::string server_address("0.0.0.0:8081");
-  AlgServiceImpl service;
+int main() {
+    std::string server_address("0.0.0.0:8081");
+    AlgServiceImpl service;
 
-  grpc::EnableDefaultHealthCheckService(true);
-  grpc::reflection::InitProtoReflectionServerBuilderPlugin();
-  ServerBuilder builder;
-  // Listen on the given address without any authentication mechanism.
-  builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
-  // Register "service" as the instance through which we'll communicate with
-  // clients. In this case it corresponds to an *synchronous* service.
-  builder.RegisterService(&service);
-  // Finally assemble the server.
-  std::unique_ptr<Server> server(builder.BuildAndStart());
-  std::cout << "Server listening on " << server_address << std::endl;
+    grpc::EnableDefaultHealthCheckService(true);
+    grpc::reflection::InitProtoReflectionServerBuilderPlugin();
+    ServerBuilder builder;
+    // Listen on the given address without any authentication mechanism.
+    builder.AddListeningPort(server_address, grpc::InsecureServerCredentials());
+    // Register "service" as the instance through which we'll communicate with
+    // clients. In this case it corresponds to an *synchronous* service.
+    builder.RegisterService(&service);
+    // Finally assemble the server.
+    std::unique_ptr<Server> server(builder.BuildAndStart());
+    std::cout << "Server listening on " << server_address << std::endl;
 
-  // Wait for the server to shutdown. Note that some other thread must be
-  // responsible for shutting down the server for this call to ever return.
-  server->Wait();
+    // Wait for the server to shutdown. Note that some other thread must be
+    // responsible for shutting down the server for this call to ever return.
+    server->Wait();
 }
