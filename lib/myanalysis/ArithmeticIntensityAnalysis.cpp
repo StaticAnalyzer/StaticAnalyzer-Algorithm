@@ -46,7 +46,7 @@ namespace my_analysis
                         // %
                         std::stringstream ss;
                         ss << "%" << rhsValue << " can be replaced by ";
-                        ss << "&" << "(" << (1 << powOf2) - 1 << ")";
+                        ss << "&" << (1 << powOf2) - 1;
                         addOptimizeResult(binaryOp->getBeginLoc(), binaryOp->getEndLoc(), ss.str());
                     } else if (binaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Div) {
                         // /
@@ -63,10 +63,10 @@ namespace my_analysis
                     }
                 }
             } else if (lhsConstant.has_value()) {
-                auto lhsValue = rhsConstant.value().getExtValue();
+                auto lhsValue = lhsConstant.value().getExtValue();
                 int powOf2 = calcPowOf2(lhsValue);
                 if (powOf2 != -1) {
-                    if (binaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Rem) {
+                    if (binaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Mul) {
                         std::stringstream ss;
                         ss << "*" << lhsValue << " can be replaced by ";
                         ss << "<<" << powOf2;
