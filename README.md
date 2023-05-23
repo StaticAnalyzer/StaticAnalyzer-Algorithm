@@ -9,7 +9,7 @@ Then, recursively clone this repository and run ctest
 according to the following commands.
 
 ```shell
-git clone --recursive -b jacy-dev https://github.com/StaticAnalyzer/StaticAnalyzer-Algorithm.git
+git clone --recursive -b dev https://github.com/StaticAnalyzer/StaticAnalyzer-Algorithm.git
 mkdir build
 cd build
 cmake -G=Ninja ..
