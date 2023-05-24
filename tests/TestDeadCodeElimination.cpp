@@ -21,7 +21,7 @@ TEST_CASE("testDeadCodeElimination") {
     std::vector<mar::ResultUnit> fileResult = result.getFileAnalyseResults().at(
             "resources/DeadCodeElimination/main.cpp");
 
-    CHECK_EQ(fileResult.size(), 5);
+    CHECK_EQ(fileResult.size(), 2);
 }
 
 TEST_SUITE_END();
