@@ -26,4 +26,8 @@ namespace my_analysis {
         return std::make_unique<ArithmeticIntensityAnalysis>();
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createDeadCodeEliminationAnalysis() const {
+        return std::make_unique<DeadCodeEliminationAnalysis>();
+    }
+
 }

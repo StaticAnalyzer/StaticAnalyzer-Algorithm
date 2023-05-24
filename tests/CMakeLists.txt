@@ -2,7 +2,8 @@ add_executable(mytests
         main.cpp
         TestInitialization.cpp
         TestUseBeforeDef.cpp
-        TestArithmeticIntensityReduce.cpp)
+        TestArithmeticIntensityReduce.cpp
+        TestDeadCodeElimination.cpp)
 
 target_link_libraries(mytests
         myanalysis

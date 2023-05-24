@@ -103,6 +103,19 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class DeadCodeEliminationAnalysis
+     * @brief eliminate dead code
+     */
+    class DeadCodeEliminationAnalysis: public Analysis {
+    public:
+
+        DeadCodeEliminationAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 
