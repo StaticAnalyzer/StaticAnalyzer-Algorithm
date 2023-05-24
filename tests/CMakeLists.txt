@@ -3,7 +3,8 @@ add_executable(mytests
         TestInitialization.cpp
         TestUseBeforeDef.cpp
         TestArithmeticIntensityReduce.cpp
-        TestDeadCodeElimination.cpp)
+        TestDeadCodeElimination.cpp
+        TestMemoryLeak.cpp)
 
 target_link_libraries(mytests
         myanalysis

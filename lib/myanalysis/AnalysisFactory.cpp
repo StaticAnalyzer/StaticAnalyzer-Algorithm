@@ -30,4 +30,8 @@ namespace my_analysis {
         return std::make_unique<DeadCodeEliminationAnalysis>();
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createMemoryLeakAnalysis() const {
+        return std::make_unique<MemoryLeakAnalysis>();
+    }
+
 }

@@ -116,6 +116,19 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class MemoryLeakAnalysis
+     * @brief detect memory leak
+     */
+    class MemoryLeakAnalysis: public Analysis {
+    public:
+
+        MemoryLeakAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 

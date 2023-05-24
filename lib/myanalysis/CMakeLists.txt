@@ -6,7 +6,9 @@ add_library(myanalysis
         AlwaysFailedAnalysis.cpp
         UseBeforeDefAnalysis.cpp
         ArithmeticIntensityAnalysis.cpp
-        DeadCodeEliminationAnalysis.cpp)
+        DeadCodeEliminationAnalysis.cpp
+        MemoryLeakAnalysis.cpp
+        dataflow/MemoryLeak.cpp)
 
 target_link_libraries(myanalysis
         libanalyzer
