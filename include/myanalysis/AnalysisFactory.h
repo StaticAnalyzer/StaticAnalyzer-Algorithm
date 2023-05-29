@@ -43,6 +43,18 @@ namespace my_analysis {
          * @return a arithmetic intensity reduce analysis
          */
         [[nodiscard]] std::unique_ptr<Analysis> createArithmeticIntensityAnalysis() const;
+
+        /**
+         * @brief create dead code elimination analysis
+         * @return a dead code elimination analysis
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createDeadCodeEliminationAnalysis() const;
+
+        /**
+         * @brief create memory leak analysis
+         * @return a memory leak analysis
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createMemoryLeakAnalysis() const;
     };
 
 } // my analysis

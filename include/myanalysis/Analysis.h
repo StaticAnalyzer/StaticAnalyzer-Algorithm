@@ -103,6 +103,32 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class DeadCodeEliminationAnalysis
+     * @brief eliminate dead code
+     */
+    class DeadCodeEliminationAnalysis: public Analysis {
+    public:
+
+        DeadCodeEliminationAnalysis();
+
+        void analyze() override;
+
+    };
+
+    /**
+     * @class MemoryLeakAnalysis
+     * @brief detect memory leak
+     */
+    class MemoryLeakAnalysis: public Analysis {
+    public:
+
+        MemoryLeakAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 
