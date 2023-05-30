@@ -8,7 +8,9 @@ add_library(myanalysis
         ArithmeticIntensityAnalysis.cpp
         DeadCodeEliminationAnalysis.cpp
         MemoryLeakAnalysis.cpp
-        dataflow/MemoryLeak.cpp)
+        dataflow/MemoryLeak.cpp
+        dataflow/NullPointer.cpp
+        NullPointerDereferenceAnalysis.cpp)
 
 target_link_libraries(myanalysis
         libanalyzer

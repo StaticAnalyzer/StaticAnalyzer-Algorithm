@@ -55,6 +55,12 @@ namespace my_analysis {
          * @return a memory leak analysis
          */
         [[nodiscard]] std::unique_ptr<Analysis> createMemoryLeakAnalysis() const;
+
+        /**
+         * @brief create null pointer dereference analysis
+         * @return a null pointer dereference analysis
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createNullPointerDereferenceAnalysis() const;
     };
 
 } // my analysis
