@@ -86,6 +86,7 @@ class AlgServiceImpl final : public AlgService::Service {
             analysisList.push_back(analysisFactory.createArithmeticIntensityAnalysis());
             analysisList.push_back(analysisFactory.createDeadCodeEliminationAnalysis());
             analysisList.push_back(analysisFactory.createMemoryLeakAnalysis());
+            analysisList.push_back(analysisFactory.createNullPointerDereferenceAnalysis());
 
             for (const auto& analysis : analysisList) {
                 analysis->analyze();
