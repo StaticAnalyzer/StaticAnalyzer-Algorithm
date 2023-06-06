@@ -11,37 +11,38 @@ namespace analyzer::analysis::dataflow {
     }
 
     std::unique_ptr<DataflowAnalysis<fact::SetFact<ir::Var>>>
-    MemoryLeak::makeAnalysis(const std::shared_ptr<graph::CFG>& cfg) const
+        MemoryLeak::makeAnalysis(const std::shared_ptr<graph::CFG>& cfg) const
     {
         class NewDeleteVisitor: public clang::StmtVisitor<NewDeleteVisitor, void> {
         public:
-            void VisitBinAssign(clang::BinaryOperator* binAssign) {
-                auto rhsExpr = binAssign->getRHS()->IgnoreParenCasts();
-                if (auto newExpr = clang::dyn_cast<clang::CXXNewExpr>(rhsExpr)) {
-                    auto varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
-                    auto varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
+            void VisitBinAssign(clang::BinaryOperator* binAssign)
+            {
+                clang::Expr* rhsExpr = binAssign->getRHS()->IgnoreParenCasts();
+                if (clang::dyn_cast<clang::CXXNewExpr>(rhsExpr)) {
+                    auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
+                    auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
                     newVarDecl = varDecl;
                 }
-                else if(auto callExpr = clang::dyn_cast<clang::CallExpr>(rhsExpr)) {
-                    auto funcName = callExpr->getDirectCallee()->getNameInfo().getAsString();
-                    if (funcName == "malloc") {
-                        auto varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
-                        auto varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
+                else if(auto* callExpr = clang::dyn_cast<clang::CallExpr>(rhsExpr)) {
+                    if (callExpr->getDirectCallee()->getNameInfo().getAsString() == "malloc") {
+                        auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
+                        auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
                         newVarDecl = varDecl;
                     }
                 }
             }
 
-            void VisitDeclStmt(clang::DeclStmt* declStmt) {
-                for (auto decl: declStmt->decls()) {
-                    if (auto varDecl = clang::dyn_cast<clang::VarDecl>(decl)) {
-                        if (auto initExpr = varDecl->getInit()) {
-                            if (auto newExpr = clang::dyn_cast<clang::CXXNewExpr>(initExpr->IgnoreParenCasts())) {
+            void VisitDeclStmt(clang::DeclStmt* declStmt)
+            {
+                for (clang::Decl* decl: declStmt->decls()) {
+                    if (auto* varDecl = clang::dyn_cast<clang::VarDecl>(decl)) {
+                        if (clang::Expr* initExpr = varDecl->getInit()) {
+                            if (clang::dyn_cast<clang::CXXNewExpr>(initExpr->IgnoreParenCasts())) {
                                 newVarDecl = varDecl;
                             }
-                            else if (auto callExpr = clang::dyn_cast<clang::CallExpr>(initExpr->IgnoreParenCasts())) {
-                                auto funcName = callExpr->getDirectCallee()->getNameInfo().getAsString();
-                                if (funcName == "malloc") {
+                            else if (auto* callExpr =
+                                    clang::dyn_cast<clang::CallExpr>(initExpr->IgnoreParenCasts())) {
+                                if (callExpr->getDirectCallee()->getNameInfo().getAsString() == "malloc") {
                                     newVarDecl = varDecl;
                                 }
                             }
@@ -50,39 +51,49 @@ namespace analyzer::analysis::dataflow {
                 }
             }
 
-            void VisitCallExpr(clang::CallExpr* callExpr) {
-                auto funcName = callExpr->getDirectCallee()->getNameInfo().getAsString();
-                if (funcName == "free") {
-                    auto arg = callExpr->getArg(0);
-                    if (auto declRefExpr = clang::dyn_cast<clang::DeclRefExpr>(arg->IgnoreParenCasts())) {
+            void VisitCallExpr(clang::CallExpr* callExpr)
+            {
+                if (callExpr->getDirectCallee()->getNameInfo().getAsString() == "free") {
+                    clang::Expr* arg = callExpr->getArg(0);
+                    if (auto* declRefExpr =
+                            clang::dyn_cast<clang::DeclRefExpr>(arg->IgnoreParenCasts())) {
                         deleteVarDecl = clang::dyn_cast<clang::VarDecl>(declRefExpr->getDecl());
                     }
                 }
             }
 
-            void VisitCXXDeleteExpr(clang::CXXDeleteExpr* deleteExpr) {
-                auto arg = deleteExpr->getArgument();
-                if (auto declRefExpr = clang::dyn_cast<clang::DeclRefExpr>(arg->IgnoreParenCasts())) {
+            void VisitCXXDeleteExpr(clang::CXXDeleteExpr* deleteExpr)
+            {
+                if (auto* declRefExpr =
+                        clang::dyn_cast<clang::DeclRefExpr>(
+                                deleteExpr->getArgument()->IgnoreParenCasts())) {
                     deleteVarDecl = clang::dyn_cast<clang::VarDecl>(declRefExpr->getDecl());
                 }
             }
 
-            void performNewDeleteAnalysis(clang::Stmt *stmt) {
-                if (stmt)
+            void performNewDeleteAnalysis(clang::Stmt *stmt)
+            {
+                if (stmt) {
                     Visit(stmt);
+                }
             }
 
-            clang::VarDecl* getNewVarDecl() {
+            clang::VarDecl* getNewVarDecl()
+            {
                 return newVarDecl;
             }
 
-            clang::VarDecl* getDeleteVarDecl() {
+            clang::VarDecl* getDeleteVarDecl()
+            {
                 return deleteVarDecl;
             }
 
         private:
+
             clang::VarDecl* newVarDecl = nullptr;
+
             clang::VarDecl* deleteVarDecl = nullptr;
+
         };
 
 
@@ -117,29 +128,39 @@ namespace analyzer::analysis::dataflow {
             {
                 std::shared_ptr<fact::SetFact<ir::Var>> oldOut = out->copy();
                 out->setSetFact(in);
-                auto clangStmt = stmt->getClangStmt();
                 NewDeleteVisitor newDeleteVisitor;
-                newDeleteVisitor.performNewDeleteAnalysis(const_cast<clang::Stmt*>(clangStmt));
-                if (auto newVarDecl = newDeleteVisitor.getNewVarDecl()) {
-                    auto var = clangToLocalVarMap.at(newVarDecl);
-                    out->add(var);
-                }
-                else if (auto deleteVarDecl = newDeleteVisitor.getDeleteVarDecl()) {
-                    auto var = clangToLocalVarMap.at(deleteVarDecl);
-                    out->remove(var);
+                newDeleteVisitor.performNewDeleteAnalysis(
+                        const_cast<clang::Stmt*>(stmt->getClangStmt()));
+                if (clang::VarDecl* newVarDecl = newDeleteVisitor.getNewVarDecl()) {
+                    out->add(clangToLocalVarMap.at(newVarDecl));
+                } else if (clang::VarDecl* deleteVarDecl = newDeleteVisitor.getDeleteVarDecl()) {
+                    out->remove(clangToLocalVarMap.at(deleteVarDecl));
                 }
                 return !out->equalsTo(oldOut);
+            }
+
+            [[nodiscard]] std::shared_ptr<fact::DataflowResult<fact::SetFact<ir::Var>>>
+            getResult() const override
+            {
+                return result;
             }
 
             explicit Analysis(const std::shared_ptr<graph::CFG>& myCFG)
                 : AbstractDataflowAnalysis<fact::SetFact<ir::Var>>(myCFG)
             {
-                for(auto& var : myCFG->getIR()->getVars())
-                    clangToLocalVarMap[var->getClangVarDecl()] = var;
+                for(std::shared_ptr<ir::Var>& var : myCFG->getIR()->getVars()) {
+                    clangToLocalVarMap.insert_or_assign(var->getClangVarDecl(), var);
+                }
+
+                result = std::make_shared<fact::DataflowResult<fact::SetFact<ir::Var>>>();
+
             }
 
         private:
+
             std::unordered_map<const clang::VarDecl*, std::shared_ptr<ir::Var>> clangToLocalVarMap;
+
+            std::shared_ptr<fact::DataflowResult<fact::SetFact<ir::Var>>> result;
 
         };
 
