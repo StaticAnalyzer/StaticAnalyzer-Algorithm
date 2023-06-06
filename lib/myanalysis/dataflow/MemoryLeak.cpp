@@ -24,7 +24,7 @@ namespace my_analysis::dataflow {
                     newVarDecl = varDecl;
                 }
                 else if(auto* callExpr = clang::dyn_cast<clang::CallExpr>(rhsExpr)) {
-                    if (callExpr->getDirectCallee()->getNameInfo().getAsString() == "malloc") {
+                    if (auto callee = callExpr->getDirectCallee(); callee && callee->getNameInfo().getAsString() == "malloc") {
                         auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
                         auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
                         newVarDecl = varDecl;
@@ -42,7 +42,7 @@ namespace my_analysis::dataflow {
                             }
                             else if (auto* callExpr =
                                     clang::dyn_cast<clang::CallExpr>(initExpr->IgnoreParenCasts())) {
-                                if (callExpr->getDirectCallee()->getNameInfo().getAsString() == "malloc") {
+                                if (auto callee = callExpr->getDirectCallee(); callee && callee->getNameInfo().getAsString() == "malloc") {
                                     newVarDecl = varDecl;
                                 }
                             }
@@ -53,7 +53,7 @@ namespace my_analysis::dataflow {
 
             void VisitCallExpr(clang::CallExpr* callExpr)
             {
-                if (callExpr->getDirectCallee()->getNameInfo().getAsString() == "free") {
+                if (auto callee = callExpr->getDirectCallee(); callee && callee->getNameInfo().getAsString() == "free") {
                     clang::Expr* arg = callExpr->getArg(0);
                     if (auto* declRefExpr =
                             clang::dyn_cast<clang::DeclRefExpr>(arg->IgnoreParenCasts())) {
