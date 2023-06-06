@@ -23,7 +23,7 @@ namespace my_analysis {
          * @param includeDir the directory path of all (default: "")
          * @param std language standard, e.g. c++98(default), c++11, c99
          */
-        AnalysisFactory(const std::string& sourceDir, const std::string& includeDir="",
+        explicit AnalysisFactory(const std::string& sourceDir, const std::string& includeDir="",
                         const std::string& std=std::string("c++98"));
 
         /**
