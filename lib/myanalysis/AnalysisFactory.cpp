@@ -7,9 +7,9 @@ namespace al = analyzer;
 namespace my_analysis {
 
     AnalysisFactory::AnalysisFactory(
-        const std::string& sourceDir, const std::string& includeDir, const std::string& std)
+        const std::string& sourceDir, const std::string& includeDir, const std::string& std, const std::vector<std::string>& optArgs)
     {
-        al::World::initialize(sourceDir, includeDir, std);
+        al::World::initialize(sourceDir, includeDir, std, optArgs);
     }
 
     std::unique_ptr<Analysis> AnalysisFactory::createAlwaysFailedAnalysis() const
