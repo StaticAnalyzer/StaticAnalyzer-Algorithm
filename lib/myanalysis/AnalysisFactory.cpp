@@ -38,4 +38,12 @@ namespace my_analysis {
         return std::make_unique<NullPointerDereferenceAnalysis>();
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createDivisionByZeroAnalysis() const {
+        return std::make_unique<DivisionByZeroAnalysis>();
+    }
+
+    std::unique_ptr<Analysis> AnalysisFactory::createArrayIndexOutOfBoundsAnalysis() const {
+        return std::make_unique<ArrayIndexOutOfBoundsAnalysis>();
+    }
+
 }

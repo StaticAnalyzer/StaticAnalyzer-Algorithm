@@ -5,7 +5,9 @@ add_executable(mytests
         TestArithmeticIntensityReduce.cpp
         TestDeadCodeElimination.cpp
         TestMemoryLeak.cpp
-        TestNullPointer.cpp)
+        TestNullPointer.cpp
+        TestDivisionByZero.cpp
+        TestArrayIndexOutOfBounds.cpp)
 
 target_link_libraries(mytests
         myanalysis

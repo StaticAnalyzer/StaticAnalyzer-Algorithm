@@ -142,6 +142,32 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class ArrayIndexOutOfBounds
+     * @brief detect array index out of bounds
+     */
+    class ArrayIndexOutOfBoundsAnalysis: public Analysis {
+    public:
+
+        ArrayIndexOutOfBoundsAnalysis();
+
+        void analyze() override;
+
+    };
+
+    /**
+     * @class DivisionByZeroAnalysis
+     * @brief detect division by zero
+     */
+    class DivisionByZeroAnalysis: public Analysis {
+    public:
+
+        DivisionByZeroAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 

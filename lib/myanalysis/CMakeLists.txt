@@ -10,7 +10,9 @@ add_library(myanalysis
         MemoryLeakAnalysis.cpp
         dataflow/MemoryLeak.cpp
         dataflow/NullPointer.cpp
-        NullPointerDereferenceAnalysis.cpp)
+        NullPointerDereferenceAnalysis.cpp
+        ArrayIndexOutOfBoundsAnalysis.cpp
+        DivisionByZeroAnalysis.cpp)
 
 target_link_libraries(myanalysis
         libanalyzer

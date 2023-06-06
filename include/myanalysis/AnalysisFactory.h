@@ -61,6 +61,18 @@ namespace my_analysis {
          * @return a null pointer dereference analysis
          */
         [[nodiscard]] std::unique_ptr<Analysis> createNullPointerDereferenceAnalysis() const;
+
+        /**
+         * @brief create array index out of bound analysis
+         * @return a array index out of bound analysis
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createArrayIndexOutOfBoundsAnalysis() const;
+
+        /**
+         * @brief create divide by zero analysis
+         * @return a divide by zero analysis
+         */
+        [[nodiscard]] std::unique_ptr<Analysis> createDivisionByZeroAnalysis() const;
     };
 
 } // my analysis
