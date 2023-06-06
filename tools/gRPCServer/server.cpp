@@ -80,7 +80,9 @@ class AlgServiceImpl final : public AlgService::Service {
         // 执行算法
         try {
             std::vector<std::unique_ptr<my_analysis::Analysis>> analysisList;
-            my_analysis::AnalysisFactory analysisFactory(project_root.string());
+            my_analysis::AnalysisFactory analysisFactory(project_root.string(),
+                                                         "/usr/lib/gcc/x86_64-linux-gnu/11/include/",
+                                                         "c++11");
 
             analysisList.push_back(analysisFactory.createUseBeforeDefAnalysis());
             analysisList.push_back(analysisFactory.createArithmeticIntensityAnalysis());
