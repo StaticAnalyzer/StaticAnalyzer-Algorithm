@@ -72,7 +72,8 @@ namespace my_analysis
         const al::World &world = al::World::get();
 
         std::unique_ptr<cf::AnalysisConfig> analysisConfig = std::make_unique<cf::DefaultAnalysisConfig>("null pointer dereference analysis");
-        std::unique_ptr<df::NullPointer> nullPointerDriver = std::make_unique<df::NullPointer>(analysisConfig);
+        std::unique_ptr<dataflow::NullPointer> nullPointerDriver =
+                std::make_unique<dataflow::NullPointer>(analysisConfig);
 
         for (const auto &[_, method] : world.getAllMethods()) {
             std::shared_ptr<air::IR> ir = method->getIR();

@@ -1,6 +1,6 @@
 #include "myanalysis/dataflow/UseBeforeDef.h"
 
-namespace analyzer::analysis::dataflow {
+namespace my_analysis::dataflow {
 
     UseBeforeDef::UseBeforeDef(std::unique_ptr<config::AnalysisConfig>& analysisConfig)
         :AnalysisDriver<fact::SetFact<ir::Var>>(analysisConfig)
@@ -8,11 +8,11 @@ namespace analyzer::analysis::dataflow {
 
     }
 
-    std::unique_ptr<DataflowAnalysis<fact::SetFact<ir::Var>>>
+    std::unique_ptr<libdataflow::DataflowAnalysis<fact::SetFact<ir::Var>>>
         UseBeforeDef::makeAnalysis(const std::shared_ptr<graph::CFG>& cfg) const
     {
 
-        class Analysis: public AbstractDataflowAnalysis<fact::SetFact<ir::Var>>{
+        class Analysis: public libdataflow::AbstractDataflowAnalysis<fact::SetFact<ir::Var>>{
         public:
 
             [[nodiscard]] bool isForward() const override

@@ -6,13 +6,19 @@
 #include "analysis/dataflow/AnalysisDriver.h"
 #include "analysis/dataflow/fact/SetFact.h"
 
-namespace analyzer::analysis::dataflow {
+namespace my_analysis::dataflow {
+
+    namespace fact = analyzer::analysis::dataflow::fact;
+    namespace ir = analyzer::ir;
+    namespace libdataflow = analyzer::analysis::dataflow;
+    namespace config = analyzer::config;
+    namespace graph = analyzer::analysis::graph;
 
     /**
      * @class MemoryLeak
      * @brief memory leak analysis
      */
-    class MemoryLeak: public AnalysisDriver<fact::SetFact<ir::Var>> {
+    class MemoryLeak: public libdataflow::AnalysisDriver<fact::SetFact<ir::Var>> {
     public:
 
         /**
@@ -23,7 +29,7 @@ namespace analyzer::analysis::dataflow {
 
     protected:
 
-        [[nodiscard]] std::unique_ptr<DataflowAnalysis<fact::SetFact<ir::Var>>>
+        [[nodiscard]] std::unique_ptr<libdataflow::DataflowAnalysis<fact::SetFact<ir::Var>>>
             makeAnalysis(const std::shared_ptr<graph::CFG>& cfg) const override;
 
     };

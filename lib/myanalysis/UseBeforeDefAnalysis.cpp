@@ -20,15 +20,15 @@ namespace my_analysis
 
         const al::World &world = al::World::get();
 
-        std::unique_ptr<cf::AnalysisConfig> analysisConfig = std::make_unique<cf::DefaultAnalysisConfig>("use bofore define analysis");
-        std::unique_ptr<df::UseBeforeDef> ubd = std::make_unique<df::UseBeforeDef>(analysisConfig);
+        std::unique_ptr<cf::AnalysisConfig> analysisConfig = std::make_unique<cf::DefaultAnalysisConfig>("use before define analysis");
+        std::unique_ptr<dataflow::UseBeforeDef> ubd = std::make_unique<dataflow::UseBeforeDef>(analysisConfig);
 
         for (const auto &[_, method] : world.getAllMethods()) {
             std::shared_ptr<air::IR> ir = method->getIR();
             std::shared_ptr<dfact::DataflowResult<dfact::SetFact<air::Var>>>
                 result = ubd->analyze(ir);
 
-            for (const auto &stmt : ir->getStmts()) {
+            for (const std::shared_ptr<air::Stmt> &stmt : ir->getStmts()) {
                 // continue if return stmt
                 const clang::Stmt *clangStmt = stmt->getClangStmt();
                 if (!clangStmt || clangStmt->getStmtClass() == clang::Stmt::ReturnStmtClass)

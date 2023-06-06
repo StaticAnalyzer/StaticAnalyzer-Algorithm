@@ -19,7 +19,8 @@ namespace my_analysis {
 
         std::unique_ptr<cf::AnalysisConfig> analysisConfig = std::make_unique<cf::DefaultAnalysisConfig>(
                 "memory leak analysis");
-        auto memoryLeakDriver = std::make_unique<df::MemoryLeak>(analysisConfig);
+        std::unique_ptr<dataflow::MemoryLeak> memoryLeakDriver
+            = std::make_unique<dataflow::MemoryLeak>(analysisConfig);
 
         for (const auto &[_, method]: world.getAllMethods()) {
             std::shared_ptr<air::IR> ir = method->getIR();

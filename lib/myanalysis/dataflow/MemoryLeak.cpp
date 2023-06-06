@@ -2,7 +2,7 @@
 
 #include "clang/AST/StmtVisitor.h"
 
-namespace analyzer::analysis::dataflow {
+namespace my_analysis::dataflow {
 
     MemoryLeak::MemoryLeak(std::unique_ptr<config::AnalysisConfig>& analysisConfig)
             :AnalysisDriver<fact::SetFact<ir::Var>>(analysisConfig)
@@ -10,7 +10,7 @@ namespace analyzer::analysis::dataflow {
 
     }
 
-    std::unique_ptr<DataflowAnalysis<fact::SetFact<ir::Var>>>
+    std::unique_ptr<libdataflow::DataflowAnalysis<fact::SetFact<ir::Var>>>
         MemoryLeak::makeAnalysis(const std::shared_ptr<graph::CFG>& cfg) const
     {
         class NewDeleteVisitor: public clang::StmtVisitor<NewDeleteVisitor, void> {
@@ -97,7 +97,7 @@ namespace analyzer::analysis::dataflow {
         };
 
 
-        class Analysis: public AbstractDataflowAnalysis<fact::SetFact<ir::Var>>{
+        class Analysis: public libdataflow::AbstractDataflowAnalysis<fact::SetFact<ir::Var>> {
         public:
 
             [[nodiscard]] bool isForward() const override
