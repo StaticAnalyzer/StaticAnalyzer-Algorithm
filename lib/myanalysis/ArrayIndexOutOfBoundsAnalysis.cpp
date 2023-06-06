@@ -17,7 +17,7 @@ namespace my_analysis
             const std::shared_ptr<df::CPResult> &res,
             std::vector<const clang::Stmt*> &targets)
     {
-        if (auto *castExpr = llvm::dyn_cast<clang::CastExpr>(expr)){
+        if (auto* castExpr = llvm::dyn_cast<clang::CastExpr>(expr)){
             auto subExpr = castExpr->getSubExpr();
             visitClangExpr(subExpr, res, targets);
         } else if (auto* parenExpr = llvm::dyn_cast<clang::ParenExpr>(expr)) {
@@ -31,7 +31,7 @@ namespace my_analysis
             auto rhs = binaryOperator->getRHS();
             visitClangExpr(lhs, res, targets);
             visitClangExpr(rhs, res, targets);
-        } else if (auto *arraySubscriptExpr = llvm::dyn_cast<clang::ArraySubscriptExpr>(expr)) {
+        } else if (auto* arraySubscriptExpr = llvm::dyn_cast<clang::ArraySubscriptExpr>(expr)) {
             auto base = arraySubscriptExpr->getBase();
             auto index = arraySubscriptExpr->getIdx();
             visitClangExpr(base, res, targets);
@@ -82,15 +82,26 @@ namespace my_analysis
         analysisConfig = std::make_unique<cf::DefaultAnalysisConfig>("array index out of bounds analysis");
         std::unique_ptr<df::ConstantPropagation> cp = std::make_unique<df::ConstantPropagation>(analysisConfig);
 
-        for (const auto &[_, method] : world.getAllMethods()) {
+        for (const auto& [_, method] : world.getAllMethods()) {
             std::vector<const clang::Stmt*> targets;
             std::shared_ptr<air::IR> ir = method->getIR();
             clang::ASTContext &astContext = method->getASTUnit()->getASTContext();
             auto result = std::dynamic_pointer_cast<df::CPResult>(cp->analyze(ir));
 
-            for (const auto &stmt : ir->getStmts()) {
-                auto *clangStmt = stmt->getClangStmt();
-                if (auto *expr = llvm::dyn_cast<clang::Expr>(clangStmt)) {
+            for (const auto& stmt : ir->getStmts()) {
+                auto* clangStmt = stmt->getClangStmt();
+                if (clangStmt == nullptr) {
+                    continue;
+                } else if (auto* declStmt = llvm::dyn_cast<clang::DeclStmt>(clangStmt)) {
+                    for (auto decl : declStmt->decls()) {
+                        if (auto* varDecl = llvm::dyn_cast<clang::VarDecl>(decl)) {
+                            auto init = varDecl->getInit();
+                            if (init != nullptr) {
+                                visitClangExpr(init, result, targets);
+                            }
+                        }
+                    }
+                } else if (auto* expr = llvm::dyn_cast<clang::Expr>(clangStmt)) {
                     visitClangExpr(expr, result, targets);
                 }
             }
