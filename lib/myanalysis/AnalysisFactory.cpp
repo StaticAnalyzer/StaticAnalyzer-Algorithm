@@ -34,4 +34,8 @@ namespace my_analysis {
         return std::make_unique<MemoryLeakAnalysis>();
     }
 
+    std::unique_ptr<Analysis> AnalysisFactory::createNullPointerDereferenceAnalysis() const {
+        return std::make_unique<NullPointerDereferenceAnalysis>();
+    }
+
 }

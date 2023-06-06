@@ -129,6 +129,19 @@ namespace my_analysis {
 
     };
 
+    /**
+     * @class NullPointerDereferenceAnalysis
+     * @brief detect null reference dereference
+     */
+    class NullPointerDereferenceAnalysis: public Analysis {
+    public:
+
+        NullPointerDereferenceAnalysis();
+
+        void analyze() override;
+
+    };
+
 } // my analysis
 
 
