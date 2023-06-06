@@ -39,7 +39,7 @@ namespace my_analysis
             auto lhsConstant = lhs->getIntegerConstantExpr(astContext);
             auto rhsConstant = rhs->getIntegerConstantExpr(astContext);
             if (rhsConstant.has_value()) {
-                auto rhsValue = rhsConstant.value().getExtValue();
+                auto rhsValue = rhsConstant.value().tryZExtValue().value_or(-1);
                 int powOf2 = calcPowOf2(rhsValue);
                 if (powOf2 != -1) {
                     if (binaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Rem) {
@@ -96,7 +96,7 @@ namespace my_analysis
             optimizeResults.emplace_back(startLoc, endLoc, message);
         }
 
-        static int calcPowOf2(int64_t val) {
+        static int calcPowOf2(uint64_t val) {
             bool isPowOf2 = std::bitset<64>(val).count() == 1;
             if (!isPowOf2)
                 return -1;
