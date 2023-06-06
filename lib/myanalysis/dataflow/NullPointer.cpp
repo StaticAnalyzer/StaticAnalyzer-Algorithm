@@ -17,18 +17,19 @@ namespace analyzer::analysis::dataflow {
     {
         class PointerAssignVisitor: public clang::StmtVisitor<PointerAssignVisitor, void> {
         public:
-            void VisitBinAssign(clang::BinaryOperator* binAssign) {
-                auto lhsExpr = binAssign->getLHS()->IgnoreParenCasts();
-                auto rhsExpr = binAssign->getRHS()->IgnoreParenCasts();
-                if (auto declRef = clang::dyn_cast<clang::DeclRefExpr>(lhsExpr)) {
-                    auto varDecl = clang::dyn_cast<clang::VarDecl>(declRef->getDecl());
+
+            void VisitBinAssign(clang::BinaryOperator* binAssign)
+            {
+                if (auto* declRef =
+                        clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts())) {
+                    auto* varDecl = clang::dyn_cast<clang::VarDecl>(declRef->getDecl());
 
                     if (varDecl && varDecl->getType()->isPointerType()) {
-                        if (rhsExpr->isNullPointerConstant(cfg->getIR()->getMethod().getASTUnit()->getASTContext(),
-                                                           clang::Expr::NPC_ValueDependentIsNotNull)) {
+                        if ( binAssign->getRHS()->IgnoreParenCasts()->isNullPointerConstant(
+                                cfg->getIR()->getMethod().getASTUnit()->getASTContext(),
+                                clang::Expr::NPC_ValueDependentIsNotNull)) {
                             nullPtrVarDecls.push_back(varDecl);
-                        }
-                        else {
+                        } else {
                             defPtrVarDecls.push_back(varDecl);
                         }
                     }
@@ -39,14 +40,13 @@ namespace analyzer::analysis::dataflow {
             }
 
             void VisitDeclStmt(clang::DeclStmt* declStmt) {
-                for (auto decl: declStmt->decls()) {
-                    if (auto varDecl = clang::dyn_cast<clang::VarDecl>(decl)) {
-                        if (auto initExpr = varDecl->getInit()) {
+                for (clang::Decl* decl: declStmt->decls()) {
+                    if (auto* varDecl = clang::dyn_cast<clang::VarDecl>(decl)) {
+                        if (clang::Expr* initExpr = varDecl->getInit()) {
                             if (initExpr->isNullPointerConstant(cfg->getIR()->getMethod().getASTUnit()->getASTContext(),
                                                                clang::Expr::NPC_ValueDependentIsNotNull)) {
                                 nullPtrVarDecls.push_back(varDecl);
-                            }
-                            else {
+                            } else {
                                 defPtrVarDecls.push_back(varDecl);
                             }
                         }
@@ -56,8 +56,9 @@ namespace analyzer::analysis::dataflow {
 
             void visitPointerAssign(clang::Stmt* stmt, std::shared_ptr<graph::CFG> pCfg) {
                 cfg = std::move(pCfg);
-                if (stmt)
+                if (stmt) {
                     Visit(stmt);
+                }
             }
 
             std::vector<const clang::VarDecl*> getNullPtrVarDecls() {
@@ -70,9 +71,13 @@ namespace analyzer::analysis::dataflow {
 
 
         private:
+
             std::shared_ptr<graph::CFG> cfg;
+
             std::vector<const clang::VarDecl*> nullPtrVarDecls;
+
             std::vector<const clang::VarDecl*> defPtrVarDecls;
+
         };
 
         class Analysis: public AbstractDataflowAnalysis<fact::SetFact<ir::Var>>{
@@ -111,30 +116,43 @@ namespace analyzer::analysis::dataflow {
                 PointerAssignVisitor visitor;
                 visitor.visitPointerAssign(const_cast<clang::Stmt*>(clangStmt), cfg);
 
-                for (auto varDecl: visitor.getNullPtrVarDecls()) {
-                    auto var = clangToLocalVarMap.at(varDecl);
-                    out->add(var);
+                for (const clang::VarDecl* varDecl: visitor.getNullPtrVarDecls()) {
+                    out->add(clangToLocalVarMap.at(varDecl));
                 }
 
-                for (auto varDecl: visitor.getDefPtrVarDecls()) {
-                    auto var = clangToLocalVarMap.at(varDecl);
-                    out->remove(var);
+                for (const clang::VarDecl* varDecl: visitor.getDefPtrVarDecls()) {
+                    out->remove(clangToLocalVarMap.at(varDecl));
                 }
 
                 return !out->equalsTo(oldOut);
             }
 
+            [[nodiscard]] std::shared_ptr<fact::DataflowResult<fact::SetFact<ir::Var>>>
+                getResult() const override
+            {
+                return result;
+            }
+
             explicit Analysis(const std::shared_ptr<graph::CFG>& myCFG)
                 : AbstractDataflowAnalysis<fact::SetFact<ir::Var>>(myCFG)
             {
-                for(auto& var : myCFG->getIR()->getVars())
-                    clangToLocalVarMap[var->getClangVarDecl()] = var;
+                for(auto& var : myCFG->getIR()->getVars()) {
+                    clangToLocalVarMap.insert_or_assign(var->getClangVarDecl(), var);
+                }
+
+                result = std::make_shared<fact::DataflowResult<fact::SetFact<ir::Var>>>();
+
             }
 
         private:
+
             std::unordered_map<const clang::VarDecl*, std::shared_ptr<ir::Var>> clangToLocalVarMap;
+
+            std::shared_ptr<fact::DataflowResult<fact::SetFact<ir::Var>>> result;
+
         };
 
         return std::make_unique<Analysis>(cfg);
     }
+
 }

@@ -140,7 +140,7 @@ namespace analyzer::analysis::dataflow {
             }
 
             [[nodiscard]] std::shared_ptr<fact::DataflowResult<fact::SetFact<ir::Var>>>
-            getResult() const override
+                getResult() const override
             {
                 return result;
             }
