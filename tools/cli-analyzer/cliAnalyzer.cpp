@@ -20,7 +20,7 @@ int main(int argc, char *argv[])
 {
     CLI::App app;
 
-    std::string sourceDir, std="c++11", outputDir;
+    std::string sourceDir, std="c++11", outputPath;
     std::vector<std::string> includeDirs;
     bool verbose = false;
 
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     app.add_option("-v,--verbose", verbose,
                    "print verbose runtime logs");
 
-    app.add_option("-O,--output", outputDir,
+    app.add_option("-O,--output", outputPath,
                    "report output file, default is stdout");
 
     CLI11_PARSE(app, argc, argv);
@@ -50,8 +50,8 @@ int main(int argc, char *argv[])
 
     std::ostream *outStream = &std::cout;
     std::ofstream outputFile;
-    if (!outputDir.empty()) {
-        outputFile.open(outputDir + "/report.txt");
+    if (!outputPath.empty()) {
+        outputFile.open( outputPath);
         outStream = &outputFile;
     }
 
