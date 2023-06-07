@@ -13,19 +13,19 @@ namespace my_analysis
         void VisitBinaryOperator(clang::BinaryOperator *binaryOp) {
             const auto& astContext = analyzer::World::get().getAstList().front()->getASTContext();
 
-            clang::Expr::EvalResult constResult;
-            bool isExprConstant = binaryOp->EvaluateAsRValue(constResult, astContext);
-            if (isExprConstant) {
-                // expr evaluate to constant
-                std::string resultDumpString;
-                llvm::raw_string_ostream os(resultDumpString);
-                constResult.Val.printPretty(os, astContext, binaryOp->getType());
-                os.flush();
-                std::string msg = "could be folded to ";
-                msg += resultDumpString;
-                addOptimizeResult(binaryOp->getBeginLoc(), binaryOp->getEndLoc(), msg);
-                return;
-            }
+//            clang::Expr::EvalResult constResult;
+//            bool isExprConstant = binaryOp->EvaluateAsRValue(constResult, astContext);
+//            if (isExprConstant) {
+//                // expr evaluate to constant
+//                std::string resultDumpString;
+//                llvm::raw_string_ostream os(resultDumpString);
+//                constResult.Val.printPretty(os, astContext, binaryOp->getType());
+//                os.flush();
+//                std::string msg = "could be folded to ";
+//                msg += resultDumpString;
+//                addOptimizeResult(binaryOp->getBeginLoc(), binaryOp->getEndLoc(), msg);
+//                return;
+//            }
 
             clang::Expr* lhs = binaryOp->getLHS();
             clang::Expr* rhs = binaryOp->getRHS();
@@ -100,7 +100,7 @@ namespace my_analysis
             bool isPowOf2 = std::bitset<64>(val).count() == 1;
             if (!isPowOf2)
                 return -1;
-            for (int i = 0; i < 64; ++i)
+            for (int i = 1; i < 64; ++i)
                 if (val & (1 << i))
                     return i;
             return -1;
@@ -118,25 +118,27 @@ namespace my_analysis
         for (const auto &[_, method] : world.getAllMethods()) {
             std::shared_ptr<analyzer::ir::IR> ir = method->getIR();
 
-            ArithmeticVisitor arithmeticVisitor;
             for (const auto &stmt : ir->getStmts()) {
+                ArithmeticVisitor arithmeticVisitor;
                 const clang::Stmt *clangStmt = stmt->getClangStmt();
                 if (clangStmt)
                     arithmeticVisitor.performArithmeticAnalysis(const_cast<clang::Stmt *>(clangStmt));
-            }
 
-            for (const auto& [startLoc, endLoc, msg] : arithmeticVisitor.getOptimizeResults()) {
-                const auto& sourceManager = method->getASTUnit()->getASTContext().getSourceManager();
-                auto startLine = static_cast<int>(sourceManager.getPresumedLineNumber(
-                        sourceManager.getExpansionLoc(startLoc)));
-                auto endLine = static_cast<int>(sourceManager.getPresumedLineNumber(
-                        sourceManager.getExpansionLoc(startLoc)));
-                auto startColumn = static_cast<int>(sourceManager.getPresumedColumnNumber(
-                        sourceManager.getExpansionLoc(endLoc)));
-                auto endColumn = static_cast<int>(sourceManager.getPresumedColumnNumber(
-                        sourceManager.getExpansionLoc(endLoc)));
-                addFileResultEntry(method->getContainingFilePath(), startLine, startColumn, endLine, endColumn,
-                                   AnalysisResult::Severity::Hint, msg);
+                const auto& result = arithmeticVisitor.getOptimizeResults();
+                if (!result.empty()){
+                    const auto& [startLoc, endLoc, msg] = result.front();
+                    const auto& sourceManager = method->getASTUnit()->getASTContext().getSourceManager();
+                    auto startLine = static_cast<int>(sourceManager.getPresumedLineNumber(
+                            sourceManager.getExpansionLoc(startLoc)));
+                    auto endLine = static_cast<int>(sourceManager.getPresumedLineNumber(
+                            sourceManager.getExpansionLoc(startLoc)));
+                    auto startColumn = static_cast<int>(sourceManager.getPresumedColumnNumber(
+                            sourceManager.getExpansionLoc(endLoc)));
+                    auto endColumn = static_cast<int>(sourceManager.getPresumedColumnNumber(
+                            sourceManager.getExpansionLoc(endLoc)));
+                    addFileResultEntry(method->getContainingFilePath(), startLine, startColumn, endLine, endColumn,
+                                       AnalysisResult::Severity::Hint, msg);
+                }
             }
         }
     }
