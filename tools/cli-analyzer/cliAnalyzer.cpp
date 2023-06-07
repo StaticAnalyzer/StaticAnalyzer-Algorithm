@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     CLI::App app;
 
     std::string sourceDir, std="c++11", outputPath;
-    std::vector<std::string> includeDirs;
+    std::vector<std::string> includeDirs, args;
     bool verbose = false;
 
     app.add_option("-S,--source-dir,", sourceDir,
@@ -39,10 +39,12 @@ int main(int argc, char *argv[])
     app.add_option("-O,--output", outputPath,
                    "report output file, default is stdout");
 
+    app.add_option("--args", args, "command line arguments");
+
     CLI11_PARSE(app, argc, argv);
 
-    std::transform(includeDirs.begin(), includeDirs.end(), includeDirs.begin(), [](std::string& s) { return "-I" + s; });
-    my_analysis::AnalysisFactory analysisFactory(sourceDir, "", std, includeDirs);
+    std::transform(includeDirs.begin(), includeDirs.end(), std::back_insert_iterator(args), [](std::string& s) { return "-I" + s; });
+    my_analysis::AnalysisFactory analysisFactory(sourceDir, "", std, args);
     if (!verbose) {
         analyzer::World::getLogger().disable();
     }
