@@ -17,6 +17,25 @@ namespace my_analysis
 
     void DeadCodeEliminationAnalysis::analyze()
     {
+        class Util {
+        public:
+            static bool isStructOrPointerOrArray(const clang::VarDecl* varDecl) {
+                const clang::QualType type = varDecl->getType();
+                const clang::Type* canonicalType = type.getTypePtr()->getCanonicalTypeInternal().getTypePtrOrNull();
+
+                if (canonicalType) {
+                    if (canonicalType->isStructureType()) {
+                        return true;
+                    } else if (canonicalType->isPointerType()) {
+                        return true;
+                    } else if (canonicalType->isArrayType()) {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+        };
         initializeSuccessfulResult("Dead Code Elimination Analysis");
 
         const al::World &world = al::World::get();
@@ -58,7 +77,8 @@ namespace my_analysis
 
                 std::unordered_set<std::shared_ptr<air::Var>> deadVarResult;
                 for (const auto& var : deadVarSet) {
-                    if (!var->getClangVarDecl()->isLocalVarDecl()) continue;
+                    if (!var->getClangVarDecl()->isLocalVarDecl()) continue;    // 全局变量不考虑
+                    if (Util::isStructOrPointerOrArray(var->getClangVarDecl())) continue;    // 结构体和指针不考虑
                     for (const auto& [stmt, deadVarArr] : deadVarStmtResult) {
                         if (std::find(deadVarArr.begin(), deadVarArr.end(), var) != deadVarArr.end()) {
                             deadVarResult.insert(var);
