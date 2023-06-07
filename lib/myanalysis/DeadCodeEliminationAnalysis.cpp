@@ -80,10 +80,14 @@ namespace my_analysis
                     if (!var->getClangVarDecl()->isLocalVarDecl()) continue;    // 全局变量不考虑
                     if (var->getClangVarDecl()->isStaticLocal()) continue;    // 静态变量不考虑
                     if (Util::isStructOrPointerOrArray(var->getClangVarDecl())) continue;    // 结构体和指针不考虑
+                    bool isDead = true;
                     for (const auto& [stmt, deadVarArr] : deadVarStmtResult) {
-                        if (std::find(deadVarArr.begin(), deadVarArr.end(), var) != deadVarArr.end()) {
-                            deadVarResult.insert(var);
+                        if (std::find(deadVarArr.begin(), deadVarArr.end(), var) == deadVarArr.end()) {
+                            isDead = false;
                         }
+                    }
+                    if (isDead) {
+                        deadVarResult.insert(var);
                     }
                 }
 
