@@ -2,6 +2,7 @@
 
 #include "World.h"
 #include "analysis/dataflow/LiveVariable.h"
+#include <map>
 
 namespace al = analyzer;
 namespace air = al::ir;
@@ -27,30 +28,56 @@ namespace my_analysis
             std::shared_ptr<air::IR> ir = method->getIR();
             auto result = lvd->analyze(ir);
 
+            std::map<int, std::vector<std::tuple<std::shared_ptr<air::Stmt>, std::vector<std::shared_ptr<air::Var>>>>> deadVars;    // line -> [(stmt, [var])]
+
             for (const auto &stmt : ir->getStmts()) {
                 std::shared_ptr<dfact::SetFact<air::Var>> outFact = result->getOutFact(stmt);
 
-                std::unordered_set<std::shared_ptr<air::Var>> deadVars;
-                for (const auto &use : stmt->getDefs()) {
-                    if (!outFact->contains(use)) {
-                        deadVars.insert(use);
+                std::vector<std::shared_ptr<air::Var>> deadVarArr;
+                for (const auto &def : stmt->getDefs()) {
+                    if (!outFact->contains(def)) {
+                        deadVarArr.push_back(def);
+                    }
+                }
+                if (!deadVarArr.empty()) {
+                    deadVars[stmt->getStartLine()].emplace_back(stmt, deadVarArr);
+                }
+            }
+            for (const auto& [line, deadVarStmtResult] : deadVars) {
+                // 本行的每个Stmt都记录的deadVar才会输出
+                std::unordered_set<std::shared_ptr<air::Var>> deadVarSet;
+                int startColumn = std::numeric_limits<int>::max();
+                int endColumn = std::numeric_limits<int>::min();
+                for (const auto& [stmt, deadVarArr] : deadVarStmtResult) {
+                    startColumn = std::min(startColumn, stmt->getStartColumn());
+                    endColumn = std::max(endColumn, stmt->getEndColumn());
+                    for (const auto& var : deadVarArr) {
+                        deadVarSet.insert(var);
                     }
                 }
 
-                if (!deadVars.empty()) {
-                    std::string msg = "Dead Var: ";
-                    bool first = true;
-                    for (const auto &var : deadVars) {
-                        if (!first)
-                            msg += ", ";
-                        msg += var->getName();
-                        first = false;
+                std::unordered_set<std::shared_ptr<air::Var>> deadVarResult;
+                for (const auto& var : deadVarSet) {
+                    for (const auto& [stmt, deadVarArr] : deadVarStmtResult) {
+                        if (std::find(deadVarArr.begin(), deadVarArr.end(), var) != deadVarArr.end()) {
+                            deadVarResult.insert(var);
+                        }
                     }
-                    addFileResultEntry(method->getContainingFilePath(),
-                                       stmt->getStartLine(), stmt->getStartColumn(), stmt->getEndLine(), stmt->getEndColumn(),
-                                       AnalysisResult::Severity::Warning, msg);
                 }
+
+                std::string msg = "Dead Var: ";
+                bool first = true;
+                for (const auto& var : deadVarResult) {
+                    if (!first)
+                        msg += ", ";
+                    msg += var->getName();
+                    first = false;
+                }
+                addFileResultEntry(method->getContainingFilePath(),
+                                   line, startColumn, line, endColumn,
+                                   AnalysisResult::Severity::Warning, msg);
             }
+
         }
     }
 
