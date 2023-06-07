@@ -78,6 +78,7 @@ namespace my_analysis
                 std::unordered_set<std::shared_ptr<air::Var>> deadVarResult;
                 for (const auto& var : deadVarSet) {
                     if (!var->getClangVarDecl()->isLocalVarDecl()) continue;    // 全局变量不考虑
+                    if (var->getClangVarDecl()->isStaticLocal()) continue;    // 静态变量不考虑
                     if (Util::isStructOrPointerOrArray(var->getClangVarDecl())) continue;    // 结构体和指针不考虑
                     for (const auto& [stmt, deadVarArr] : deadVarStmtResult) {
                         if (std::find(deadVarArr.begin(), deadVarArr.end(), var) != deadVarArr.end()) {
