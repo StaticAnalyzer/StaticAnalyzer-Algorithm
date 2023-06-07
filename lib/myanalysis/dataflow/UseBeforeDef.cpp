@@ -24,10 +24,10 @@ namespace my_analysis::dataflow {
             {
                 auto boundaryFact = std::make_shared<fact::SetFact<ir::Var>>();
                 for (const auto &var : cfg->getIR()->getVars()) {
-                    boundaryFact->add(var);
-                }
-                for (const auto &param : cfg->getIR()->getParams()) {
-                    boundaryFact->remove(param);
+                    const clang::VarDecl *decl = var->getClangVarDecl();
+                    if (decl != nullptr && decl->isLocalVarDecl()) {
+                        boundaryFact->add(var);
+                    }
                 }
                 return boundaryFact;
             }
