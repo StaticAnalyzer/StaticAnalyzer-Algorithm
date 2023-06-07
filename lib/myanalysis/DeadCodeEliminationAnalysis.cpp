@@ -58,6 +58,7 @@ namespace my_analysis
 
                 std::unordered_set<std::shared_ptr<air::Var>> deadVarResult;
                 for (const auto& var : deadVarSet) {
+                    if (!var->getClangVarDecl()->isLocalVarDecl()) continue;
                     for (const auto& [stmt, deadVarArr] : deadVarStmtResult) {
                         if (std::find(deadVarArr.begin(), deadVarArr.end(), var) != deadVarArr.end()) {
                             deadVarResult.insert(var);
@@ -65,17 +66,19 @@ namespace my_analysis
                     }
                 }
 
-                std::string msg = "Dead Var: ";
-                bool first = true;
-                for (const auto& var : deadVarResult) {
-                    if (!first)
-                        msg += ", ";
-                    msg += var->getName();
-                    first = false;
+                if (!deadVarResult.empty()) {
+                    std::string msg = "Dead Var: ";
+                    bool first = true;
+                    for (const auto& var : deadVarResult) {
+                        if (!first)
+                            msg += ", ";
+                        msg += var->getName();
+                        first = false;
+                    }
+                    addFileResultEntry(method->getContainingFilePath(),
+                                       line, startColumn, line, endColumn,
+                                       AnalysisResult::Severity::Warning, msg);
                 }
-                addFileResultEntry(method->getContainingFilePath(),
-                                   line, startColumn, line, endColumn,
-                                   AnalysisResult::Severity::Warning, msg);
             }
 
         }
