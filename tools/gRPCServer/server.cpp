@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <unistd.h>
 #include <random>
+#include "json.hpp"
 
 #include <grpcpp/ext/proto_server_reflection_plugin.h>
 #include <grpcpp/grpcpp.h>
@@ -14,6 +15,7 @@
 #include "algservice.grpc.pb.h"
 
 #include "myanalysis/AnalysisFactory.h"
+#include "World.h"
 
 using grpc::Server;
 using grpc::ServerBuilder;
@@ -55,8 +57,7 @@ public:
 class AlgServiceImpl final : public AlgService::Service {
     Status Analyse(ServerContext *context, const AnalyseRequest *request,
                    AnalyseResponse *reply) override {
-        std::string file = request->file();
-        std::string config = request->config();
+        const std::string& file = request->file();
 
         // 保存文件到本地
         std::string dir = AlgServiceUtils::RandomStr(20);
@@ -79,10 +80,29 @@ class AlgServiceImpl final : public AlgService::Service {
 
         // 执行算法
         try {
+            auto config = nlohmann::json::parse(request->config());
+            auto defMacrosJson = config.value("defMacros", std::vector<std::string>());
+            auto includes = config.value("includeDirs", std::vector<std::string>());
+            auto std = config.value("std", std::string("c++11"));
+
+            std::vector<std::string> args;
+            args.emplace_back("-I/usr/local/include");
+            args.emplace_back("-I/usr/lib/gcc/x86_64-linux-gnu/11/include");
+            for (const auto &include : includes) {
+                fs::path includePath(include);
+                if (includePath.is_relative())
+                    args.emplace_back("-I" + (project_root / include).string());
+                else
+                    args.emplace_back("-I" + include);
+            }
+            for (const auto &defMacro : defMacrosJson) {
+                args.emplace_back("-D" + defMacro);
+            }
+
             std::vector<std::unique_ptr<my_analysis::Analysis>> analysisList;
             my_analysis::AnalysisFactory analysisFactory(project_root.string(),
-                                                         "/usr/lib/gcc/x86_64-linux-gnu/11/include/",
-                                                         "c++11");
+                                                         "",
+                                                         std, args);
 
             analysisList.push_back(analysisFactory.createUseBeforeDefAnalysis());
             analysisList.push_back(analysisFactory.createArithmeticIntensityAnalysis());
@@ -185,6 +205,8 @@ class AlgServiceImpl final : public AlgService::Service {
 };
 
 int main() {
+    analyzer::World::getLogger().disable();
+
     std::string server_address("0.0.0.0:8081");
     AlgServiceImpl service;
 
