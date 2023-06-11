@@ -63,7 +63,7 @@ namespace my_analysis
                     }
                 }
             } else if (lhsConstant.has_value()) {
-                auto lhsValue = lhsConstant.value().getExtValue();
+                auto lhsValue = lhsConstant.value().tryZExtValue().value_or(-1);
                 int powOf2 = calcPowOf2(lhsValue);
                 if (powOf2 != -1) {
                     if (binaryOp->getOpcode() == clang::BinaryOperatorKind::BO_Mul) {
