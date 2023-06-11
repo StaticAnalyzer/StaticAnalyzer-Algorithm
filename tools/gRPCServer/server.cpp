@@ -155,6 +155,10 @@ class AlgServiceImpl final : public AlgService::Service {
         alg_result.set_msg(result.getMsg());
 
         for (const auto &[filename, file_result_raw]: result.getFileAnalyseResults()) {
+            if (filename.empty()) {
+                std::cout << "Warning: filename is empty" << std::endl;
+                continue;
+            }
             FileAnalyseResults file_result;
             for (const auto &result_entry_raw: file_result_raw) {
                 AnalyseResultEntry &&result_entry = convertToAnalyseResultEntry(result_entry_raw);
