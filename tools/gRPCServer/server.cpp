@@ -86,8 +86,7 @@ class AlgServiceImpl final : public AlgService::Service {
             auto std = config.value("std", std::string("c++11"));
 
             std::vector<std::string> args;
-            args.emplace_back("-I/usr/local/include");
-            args.emplace_back("-I/usr/lib/gcc/x86_64-linux-gnu/11/include");
+            args.emplace_back("-I/usr/lib/llvm-17/lib/clang/17/include");
             for (const auto &include : includes) {
                 fs::path includePath(include);
                 if (includePath.is_relative())
