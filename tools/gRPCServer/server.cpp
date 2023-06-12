@@ -80,8 +80,9 @@ class AlgServiceImpl final : public AlgService::Service {
 
         // 执行算法
         try {
-            auto config = nlohmann::json::parse(request->config());
-            auto defMacrosJson = config.value("defMacros", std::vector<std::string>());
+            auto configStr = request->config().empty() ? "{}" : request->config();
+            auto config = nlohmann::json::parse(configStr);
+            auto defMacros = config.value("defMacros", std::vector<std::string>());
             auto includes = config.value("includeDirs", std::vector<std::string>());
             auto std = config.value("std", std::string("c++11"));
 
@@ -94,7 +95,7 @@ class AlgServiceImpl final : public AlgService::Service {
                 else
                     args.emplace_back("-I" + include);
             }
-            for (const auto &defMacro : defMacrosJson) {
+            for (const auto &defMacro : defMacros) {
                 args.emplace_back("-D" + defMacro);
             }
 
