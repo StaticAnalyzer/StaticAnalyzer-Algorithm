@@ -19,15 +19,15 @@ namespace my_analysis::dataflow {
             {
                 clang::Expr* rhsExpr = binAssign->getRHS()->IgnoreParenCasts();
                 if (clang::dyn_cast<clang::CXXNewExpr>(rhsExpr)) {
-                    auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
-                    auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
-                    newVarDecl = varDecl;
+                    if (auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts())) {
+                        if (auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl()))
+                            newVarDecl = varDecl;
+                    }
                 }
                 else if(auto* callExpr = clang::dyn_cast<clang::CallExpr>(rhsExpr)) {
-                    if (auto callee = callExpr->getDirectCallee(); callee && callee->getNameInfo().getAsString() == "malloc") {
-                        auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts());
-                        auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl());
-                        newVarDecl = varDecl;
+                    if (auto* varDeclExpr = clang::dyn_cast<clang::DeclRefExpr>(binAssign->getLHS()->IgnoreParenCasts())) {
+                        if (auto* varDecl = clang::dyn_cast<clang::VarDecl>(varDeclExpr->getDecl()))
+                            newVarDecl = varDecl;
                     }
                 }
             }

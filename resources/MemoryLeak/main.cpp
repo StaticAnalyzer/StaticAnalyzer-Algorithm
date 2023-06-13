@@ -24,6 +24,12 @@ void test_shadow() {
     delete x;
 }
 
+void test_dim2(int **x) {
+    *x = new int;
+    *x = (int*) malloc(sizeof(int));
+    x[1] = new int;
+}
+
 void test_branch() {
     int *x = new int;
     if (input()) {
