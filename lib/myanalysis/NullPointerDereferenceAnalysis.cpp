@@ -44,6 +44,13 @@ namespace my_analysis
                 }
             }
 
+            void VisitStmt(clang::Stmt *S) {
+                // 默认情况下，我们将继续遍历子语句
+                for (clang::Stmt *Child : S->children())
+                    if (Child)
+                        Visit(Child);
+            }
+
             void VisitMemberExpr(clang::MemberExpr *E) {
                 if (E->isArrow()) {
                     clang::Expr* expr = E->getBase()->IgnoreParenCasts();
