@@ -44,6 +44,20 @@ namespace my_analysis
                 }
             }
 
+            void VisitMemberExpr(clang::MemberExpr *E) {
+                if (E->isArrow()) {
+                    clang::Expr* expr = E->getBase()->IgnoreParenCasts();
+                    if (auto declRefExpr = clang::dyn_cast<clang::DeclRefExpr>(expr)) {
+                        const clang::VarDecl* varDecl = clang::dyn_cast<clang::VarDecl>(declRefExpr->getDecl());
+                        if (varDecl) {
+                            if (nullPtrFacts.find(varDecl) != nullPtrFacts.end()) {
+                                nullDerefVarDecls.insert(varDecl);
+                            }
+                        }
+                    }
+                }
+            }
+
             void VisitBinaryOperator(clang::BinaryOperator* binOp) {
                 Visit(binOp->getLHS());
                 Visit(binOp->getRHS());
