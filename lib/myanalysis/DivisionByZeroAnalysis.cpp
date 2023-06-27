@@ -12,7 +12,7 @@ namespace dfact = df::fact;
 namespace my_analysis
 {
 
-    static void visitClangExpr(
+    static std::shared_ptr<df::CPValue> visitClangExpr(
         const clang::Expr *expr,
         const std::shared_ptr<df::CPResult> &res,
         std::unordered_set<const clang::Stmt*> &targets)
@@ -22,7 +22,7 @@ namespace my_analysis
             visitClangExpr(subExpr, res, targets);
         } else if (auto* parenExpr = llvm::dyn_cast<clang::ParenExpr>(expr)) {
             auto subExpr = parenExpr->getSubExpr();
-            visitClangExpr(subExpr, res, targets);
+            return visitClangExpr(subExpr, res, targets);
         } else if (auto* unaryOp = llvm::dyn_cast<clang::UnaryOperator>(expr)) {
             auto subExpr = unaryOp->getSubExpr();
             visitClangExpr(subExpr, res, targets);
@@ -30,15 +30,42 @@ namespace my_analysis
             auto lhs = binaryOperator->getLHS();
             auto rhs = binaryOperator->getRHS();
             visitClangExpr(lhs, res, targets);
-            visitClangExpr(rhs, res, targets);
-            auto rhsValue = res->getExprValue(rhs);
-            if(rhsValue != nullptr && rhsValue->isConstant() && rhsValue->getConstantValue().isZero()) {
+            auto rhsValue = visitClangExpr(rhs, res, targets);
+            if (binaryOperator->getOpcode() == clang::BinaryOperatorKind::BO_Xor) {
+                clang::VarDecl* varDecl = nullptr;
+                if (auto* lhsCastExpr = llvm::dyn_cast<clang::CastExpr>(lhs)) {
+                    if (auto* lhsDeclDef = llvm::dyn_cast<clang::DeclRefExpr>(lhsCastExpr->getSubExpr())) {
+                        auto lhsDecl = lhsDeclDef->getDecl();
+                        if (auto* lhsVarDecl = llvm::dyn_cast<clang::VarDecl>(lhsDecl)) {
+                            varDecl = lhsVarDecl;
+                        }
+                    }
+                }
+                if (auto* rhsCastExpr = llvm::dyn_cast<clang::CastExpr>(rhs)) {
+                    if (auto* rhsDeclDef = llvm::dyn_cast<clang::DeclRefExpr>(rhsCastExpr->getSubExpr())) {
+                        auto rhsDecl = rhsDeclDef->getDecl();
+                        if (auto* rhsVarDecl = llvm::dyn_cast<clang::VarDecl>(rhsDecl)) {
+                            if (varDecl == rhsVarDecl) {
+                                return df::CPValue::makeConstant(llvm::APSInt(llvm::APInt()));
+                            }
+                        }
+                    }
+                }
+            }
+            if (rhsValue->isConstant()) {
                 switch (binaryOperator->getOpcode()) {
                     case clang::BinaryOperatorKind::BO_Div:
                     case clang::BinaryOperatorKind::BO_DivAssign:
                     case clang::BinaryOperatorKind::BO_Rem:
                     case clang::BinaryOperatorKind::BO_RemAssign:
-                        targets.insert(binaryOperator);
+                        if (rhsValue->getConstantValue().isZero()) {
+                            targets.insert(binaryOperator);
+                        }
+                        break;
+                    case clang::BinaryOperatorKind::BO_And:
+                        if (rhsValue->getConstantValue().isZero()) {
+                            return df::CPValue::makeConstant(llvm::APSInt(llvm::APInt()));
+                        }
                         break;
                     default:
                         break;
@@ -63,6 +90,9 @@ namespace my_analysis
                 visitClangExpr(arg, res, targets);
             }
         }
+
+        auto value = res->getExprValue(expr);
+        return value ? value : df::CPValue::getNAC();
     }
 
     DivisionByZeroAnalysis::DivisionByZeroAnalysis() = default;

@@ -11,5 +11,8 @@ int main() {
     e /= zero;
     int f[12];
     f[6 / zero] = 1;
+    int g = foo(1);
+    int h = foo(1 / (g & 0x0));
+    int i = foo(1 / (g ^ g));
     return 0;
 }

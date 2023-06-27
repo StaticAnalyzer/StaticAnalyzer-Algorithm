@@ -21,14 +21,14 @@ TEST_CASE("testDivisionByZeroTest") {
     std::vector<mar::ResultUnit> fileResult = result.getFileAnalyseResults().at(
         "resources/DivisionByZero/main.cpp");
 
-    CHECK_EQ(fileResult.size(), 4);
+    CHECK_EQ(fileResult.size(), 6);
 
     std::set<int> resultSet;
     for (const auto& unit : fileResult) {
         resultSet.insert(unit.getStartLine());
     }
 
-    CHECK_EQ(resultSet, std::set<int>{8, 9, 11, 13});
+    CHECK_EQ(resultSet, std::set<int>{8, 9, 11, 13, 15, 16});
 
 }
 
